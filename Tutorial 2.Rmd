@@ -1,0 +1,354 @@
+---
+title: "Tutorial 2: Data Visualisation and Cross Tabulations"
+author: "Rhys Davies"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+pacman::p_load(palmerpenguins) # penguin dataset
+pacman::p_load(tidyverse) # ggplot and data tidying functions
+pacman::p_load(GGally) # functions for ready made plots
+pacman::p_load(jtools) # Journal tools - themes ready for publication
+pacman::p_load(plotly) # Tools to make your plot interactive.
+pacman::p_load(gt) # pretty tables
+pacman::p_load(gtsummary) # Easy summary tables
+```
+
+# Part 1: Data Visualisations in R
+
+R is incredibly powerful for data visualisations. The `ggplot()` function allows for so much customisation and control of your plots, and it all follows a recipe structure. For those interested, this recipe structure is based on the [grammar of graphics](https://link.springer.com/book/10.1007/0-387-28695-0) by Leland Wilkinson. The grammar of graphics is inspired by how we use grammar in language - as a framework to allow for clearer communication. We are going to learn how to use ggplot through the steps of the grammar of graphics.
+
+### Step 1: The data
+
+Without data, we have nothing to visualise. So our first step is always to assign the dataset.
+
+```{r}
+
+ggplot(data = penguins)
+
+```
+
+However, when we run the code, we are presented with an empty gray box. This is because we havent specified which `aesthetics` we want to communicate. This is done with the following step with the `aes()` command.
+
+### Step 2: Setting the aesthetic
+
+Now we are setting the aesthetic. This basically means choosing your variables. At it's most basic, we are deciding our `x` and `y` variables, but this can also extend to setting the `shape`, `color`/`colour` (both spellings work), `fill`, `size`, `linetype` and [many other choices](https://ggplot2.tidyverse.org/articles/ggplot2-specs.html). 
+
+```{r}
+ggplot(data = penguins,
+       aes(x = flipper_length_mm, y = body_mass_g, color = species)
+       ) 
+
+```
+
+However, running this code we still see a somewhat empty plot. Our main change is that our axes have now been filled in with our selected variables. To see our data on these axes, we need to first choose the `geometry` by which it will shaped. This is done with the `geom_...` options. 
+
+### Step 3: Setting the `geom`
+
+This is the step where our plot will begin to look like a plot! It's also the stage where R is very powerful, as we can layer multiple geometries to communicate our data exactly as we want to. There are a wide range of geometric options to choose from - and some are better suited to specific data types. A wide range of the `geom...` options are found [here](https://ggplot2.tidyverse.org/reference/). And for your convenience, here is a list of the geoms I tend to use:
+- `geom_point()` : communicates your data into a scatter chart.
+- `geom_smooth()` : communicates your data into smoothed conditional means (i.e., loess models, linear models, and generalised linear models).
+- `geom_col()` : Communicates your data into columns based on value of data. 
+- `geom_bar()` : Communicates your data into columns based on number of cases or sum of values in the data.
+- `geom_hist()`: Communicates your data into a histogram.
+- `geom_boxplot()`: Communicates your data into boxplots.
+- `geom_violin()`: Similar to boxplot, but it communicates the distribution of the data (think of it as a combination of a boxplot and a histogram).
+
+```{r}
+ggplot(data = penguins,
+       aes(x = flipper_length_mm, y = body_mass_g, color = bill_length_mm)
+       )+
+  geom_point()
+```
+
+And look! We finally have something that looks like a plot! We can additional layers by adding additional geoms. The order of the layering is determined by the order you present them. 
+
+```{r}
+ggplot(data = penguins,
+       aes(x = flipper_length_mm, y = body_mass_g, color = bill_length_mm)
+       )+
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
+#### Task time
+
+1) Create a boxplot comparing `body_mass_g` across the different penguin `species`, using the `geom_boxplot()` command. The starting template has been provided for this first task, but you will be on your own for the rest of this set.
+
+```{r}
+ggplot(data = penguins,
+       aes(x = species, y = bodymass_g)
+       ) +
+  
+  
+```
+
+2) Add a violin layer to the previous plot with `geom_violin()`
+
+```{r}
+
+```
+
+3) Fill in the geoms with some colour with the `fill = ` aesthetic option. Decide which variable to colour your plots by.
+
+```{r}
+
+```
+
+4) Play around! Change the arrangement of the layers, and add some extra commands to see what happens. For more advanced playing, use `help(geom_boxplot)` and `help(geom_violin)` to find additional options to experiment with. Also try adding `aes(fill = island)` into the geom layers and into the aesthetic options. Compare any differences you might see between these.
+
+```{r}
+
+```
+
+## Step 4: Faceting
+
+Faceting is a looking/sounding word, but here it signals if you need to consider if the plot should be divided by a categorical variable. This can be done in 2 main ways; either by setting a categorical variable to one of our aesthetic options, or by using faceting functions. We have the `facet_wrap()` for when we want to facet by 1 variable. And we have the `facet_grid()` for when we want to facet by multiple variables.
+
+### Faceting by aesthetic
+
+The following examples show how we can facet our data by aesthetic options. The code will also demonstrate how this can be performed within the `ggplot()` code chunk, and within the `geom` options. Compare both options and look at the effect it has on the `geom_smooth()` layers. 
+
+```{r}
+ggplot(data = penguins,
+       aes(x = bill_length_mm, y = bill_depth_mm,
+           color = species)
+       )+
+  geom_point() +
+  geom_smooth(method = "lm") 
+```
+
+```{r}
+ggplot(data = penguins,
+       aes(x = bill_length_mm, y = bill_depth_mm)
+       )+
+  geom_point(aes(color = species)) +
+  geom_smooth(method = "lm") 
+```
+
+So, is the association between bill length and bill depth in penguins positive or negative? Or is it both? ;) (This is an example of a [Simpson paradox](https://en.wikipedia.org/wiki/Simpson%27s_paradox#:~:text=Simpson's%20paradox%20is%20a%20phenomenon%20in%20probability%20and) that we can come across in stats. Data vis options makes it easier to communicate.)
+
+### Faceting_wrap
+
+We can also go beyond faceting by aesthetics. The following code communicates how to facet by split the plot into sub-samples. To split the plot by one categorical variable, we use the `facet_wrap()` command.
+
+```{r}
+ggplot(data = penguins,
+       aes(x = flipper_length_mm, y = body_mass_g)
+       )+
+  geom_point() +
+  geom_smooth(method = "lm") +
+  facet_wrap(~species) # We use the ~ to assign the variable to facet by
+```
+
+### Faceting multiple variables
+
+To facet multiple variables, we use the `facet_grid()` command. Here we use the `~` to assign each variable we wish to split out plot by. 
+
+*note: facet_grid() also works on just the one categorical variable, but its functionality options are designed for multiple variables. 
+
+```{r, warning = FALSE}
+ggplot(data = penguins,
+       aes(x = flipper_length_mm, y = body_mass_g)
+       )+
+  geom_point() +
+  geom_smooth(method = "lm") +
+  facet_grid(~species ~ island ~sex) # Faceting multiple variables
+```
+
+##  10 min Break Time.
+
+## Step 5: Coordinates
+
+We can change the coordinates of a plot to influence how our plots are interpreted. This can be using functions such as `coord_flip()` to switch our axes.
+
+### Coord Flip
+
+```{r}
+ggplot(data = penguins,
+       aes(x = species, y = body_mass_g)
+       ) +
+  geom_violin() +
+  coord_flip()
+```
+
+We can also `coord_cartesian()` to zoom in and out on our plot. I know this is an area of debate when it comes to data visualisation. Whilst some will argue that the axes need to always start at 0 to avoid misleading audiences, there are cases when adjusting the axes can communicate research with greater clarity (i.e., domains where small differences are very important, such as survival rates). For coord cartesian, we select the lower and upper ranges we want to communicate for our x and y variables.
+
+### Coordcartesian
+
+```{r}
+ggplot(data = penguins,
+       aes(x = flipper_length_mm, y = bill_length_mm)
+       ) +
+  geom_point() +
+  coord_cartesian(ylim = c(30,55), # we use c to choose our lower and upper ranges
+                  xlim = c(175, 205))
+```
+For the code chunk below, investigate what happens if you remove the `coord_cartesian()` command. 
+
+```{r}
+
+ggplot(data = penguins,
+       aes(x = sex, y = body_mass_g)
+       ) +
+  geom_col() +
+  coord_cartesian(ylim = c(600000,780000))
+```
+
+We can also use `coord_fixed()` function to automatically adjust the coordinates to display a plot with a fixed aspect ratio so that one unit has the same length in both the x and y directions. Make sure your variables have comparable units for this, or you might end up with a very squashed plot.
+
+### Coord fixed
+
+```{r}
+ggplot(data = penguins,
+       aes(x = flipper_length_mm, y = bill_length_mm)
+       ) +
+  geom_point() +
+  coord_fixed()
+```
+
+```{r}
+# The squashed plot
+ggplot(data = penguins,
+       aes(x = flipper_length_mm, y = body_mass_g)
+       ) +
+  geom_point() +
+  coord_fixed() 
+```
+
+## Theme
+
+Themes are used in R to control almost any visuals details of the plot, that are not associated with the data used. It is to do entirely with the aesthetics, and so will shape the look and feel of your plot.
+
+The theme for customizations ranging from changing the location of the legends to setting the background color of the plot. Many elements in the theme are hierarchical in that setting the look of the general axis line affects those of the x and y axes simultaneously. For further details on customising your themes, [this guide](https://ggplot2-book.org/themes) provides plenty of gems.
+
+There are also a variety of [ready made themes](https://ggplot2.tidyverse.org/reference/ggtheme.html) to use. R users have also submitted their own customised themes that others can access, which can be accessed by installing and loading the [`ggthemes`](https://github.com/jrnold/ggthemes) package.
+
+I've included `jtools` as a ready made theme package, as it contains a APA format theme. Very handy for anyone that wants to publish in psychology journals.
+
+```{r, warning= FALSE}
+ggplot(data = penguins,
+       aes(x = bill_length_mm, y = bill_depth_mm,
+           color = species)
+       )+
+  geom_point() +
+  geom_smooth(method = "lm") +
+  theme(legend.position = "top") # play with this; replace "top" with "bottom", "left", and "right". 
+```
+
+```{r, warning= FALSE}
+ggplot(data = penguins,
+       aes(x = bill_length_mm, y = bill_depth_mm,
+           color = species)
+       )+
+  geom_point() +
+  geom_smooth(method = "lm") +
+  theme_minimal()+ # This is a ready made theme. Try replacing it with theme_dark(), or theme_bw()
+  theme(legend.position = "top") # We can also layer our theme options
+```
+
+Below, I'm assigning our plot to an object named `plot`. This is to make the next steps easier, as it will save retyping our code.
+
+```{r, warning= FALSE}
+plot <- ggplot(data = penguins,
+       aes(x = bill_length_mm, y = bill_depth_mm,
+           color = species)
+       )+
+  geom_point() +
+  geom_smooth(method = "lm") +
+  theme_apa()+ # This is the APA theme, which makes gets our stylings ready for APA journal demands.
+  theme(text=element_text(size=10), #change font size of all text
+        axis.text=element_text(size=10), #change font size of axis text
+        axis.title=element_text(size=20), #change font size of axis titles
+        plot.title=element_text(size=20), #change font size of plot title
+        legend.text=element_text(size=10), #change font size of legend text
+        legend.title=element_text(size=10), #change font size of legend title
+        legend.position = "bottom"
+        
+        ) 
+
+plot
+```
+
+## Labels
+
+Last of all, we have our essential labels. These let us clearly communicate what it is our plot is showing to the world. We can customise our title, our axes, our legends. All of it! It also allows to make our plot text more human friendly. We can relabel our axes to remove the underscore, and to set our units. 
+
+```{r}
+final_plot <- plot +
+  labs(title = "Our Pretty Penguin Plot",
+       subtitle = "It's really pretty isnt it?",
+       x = "Bill Length (mm)",
+       y = "Bill Depth (mm)",
+       color = "") # We can remove label text by leaving empty space in the quotation marks
+
+final_plot
+```
+
+## Bonus plot material
+
+Sometimes having interactive elements to a plot can be very useful for presenting our research - especially at conferences, or in online posters. It is very easy to in R, we simply assign our finished plot to an object, and use the `ggplotly()` function from the `plotly` package on it... and voila, an interactive plot. 
+
+(note - not all features of our plot will translate to plotly objects nicely. You may need to investigate the `plotly` package if you require further control).
+
+```{r}
+ggplotly(final_plot)
+```
+
+
+## Task time
+
+For this task, we are going to use the `iris` dataset to make your own interactive plot! Start with your ggplot code, create your plot, choose your theme, give it meaningful labels, assign it to an object, and use the `ggplotly()` function to make it interactive.
+
+I've included the code for a summary of iris, so that you can identify your variables with greater ease.
+
+```{r}
+summary(iris)
+```
+
+```{r}
+
+```
+
+## Ready made plots
+
+We can also take advantage of additional packages to get even more out ggplot. One such package is `ggally`, where it's [`ggpairs()`](https://ggobi.github.io/ggally/articles/ggpairs.html) function which allows us to produce this amazing combination of histograms and correlation plots (alongside correlation coefficients). This is a very useful function for exploratory analyses.
+
+```{r warning=FALSE, message=FALSE}
+# on complete dataset
+ggpairs(data = iris) 
+
+# Splitting by colour
+ggpairs(data = iris,
+        mapping = aes(color = Species) 
+        )
+
+# Selecting variables
+ggpairs(data = iris,
+        mapping = aes(color = Species),
+        columns = c("Sepal.Width", "Petal.Length", "Species"),
+        columnLabels = c("Sepal Length (cm)", "Petal Length (cm)", "Species")
+        )
+```
+
+# Cross tabular data
+
+In addition to plots, it's also very important to be able to supplement our data in tables. Particularly when are want to analyse only categorical variables. Thankfully, the `gtsummary` package makes this nice and easy with the `tbl_cross()` function.
+
+```{r}
+
+penguins %>%
+  na.omit() %>%
+tbl_cross(
+          col = sex, # choose variable for columns 
+          row = species, # choose variables for rows
+          percent = "cell"
+          ) %>%
+  add_p() %>% # Run chi square test, or Fischer's exact test (will select automatically)
+  bold_labels() # make labels bold, so easier to read
+
+```
+
+
