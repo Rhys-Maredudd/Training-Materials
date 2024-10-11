@@ -5,9 +5,10 @@ author: "Rhys Maredudd Davies"
 format: 
   revealjs:
     smaller: true
-    theme: dark
+    theme: night
     slide-tone: true
     chalkboard: true
+    logo: "https://raw.github.com/Rhys-Maredudd/Training-Materials/main/Lecture_slides/images/UoE_Stacked%20Logo_CMYK_v1_160215.png"
 editor: visual
 ---
 
@@ -20,9 +21,12 @@ pacman::p_load(rstatix) # stats package for easy t-tests
 pacman::p_load(report) # consistent stats reporting
 pacman::p_load(gghalves) # Use to load half plot geometries
 pacman::p_load(Hmisc) # Used to plot confidence intervals
+theme_set(theme_minimal()) # Replacing default plot theme with theme_minimal()
 ```
 
-## Session Aims
+## Session Aims 
+
+::: {.incremental}
 
 -   Understanding what inferential statistics are, and why we use them.
 
@@ -34,7 +38,7 @@ pacman::p_load(Hmisc) # Used to plot confidence intervals
 
 -   To critically evaluate null hypothesis tests and statistical analyses.
 
-
+:::
 
 ## What are inferential statistics? 
 
@@ -1437,6 +1441,8 @@ Today, we covered:
 * [An intro to Data Analysis](https://michael-franke.github.io/intro-data-analysis/general-introduction.html). In depth discussions and explanations on Bayesian and Frequentist statistics with R. 
 
 * [Bad Science, Ben Goldacre](https://www.amazon.co.uk/Bad-Science-Ben-Goldacre/dp/000728487X/?tag=bs0b-21). A great read on tricks and tips on critically evaluating research design and statistics. I strongly reccomend finding it if you find this topic to be intimidating, as the book is funny, informative and makes many great recommendations of critically evaluating science.
+
+* [Delacre, M., Lakens, D., & Leys, C. (2017). Why psychologists should by default use Welch's t-test instead of Student's t-test. International Review of Social Psychology, 30(1), 92-101.](https://research.tue.nl/en/publications/why-psychologists-should-by-default-use-welchs-t-test-instead-of-)
 
 * [Leek, J. T., & Peng, R. D. (2015). Statistics: P values are just the tip of the iceberg. Nature, 520(7549), 612-612.](https://www.nature.com/articles/520612a). (For a critical evaluation of the p-value).
 
