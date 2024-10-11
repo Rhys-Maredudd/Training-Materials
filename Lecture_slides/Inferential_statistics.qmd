@@ -14,7 +14,7 @@ editor: visual
 
 ```{r, echo = FALSE}
 ## Setup
-# Tip - if presentation does not work, install the "pacman" package first.
+# Tip - if presentation does not work, install the "pacman" package first  with: install.packages("pacman")
 pacman::p_load(tidyverse) # tidy data and make nice plots
 pacman::p_load(gt) # tidy tables
 pacman::p_load(rstatix) # stats package for easy t-tests
