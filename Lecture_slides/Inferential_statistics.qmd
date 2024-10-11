@@ -1,0 +1,1447 @@
+---
+title: "Introduction to Data Science in R:" 
+subtitle: "Inferential Statistics"
+author: "Rhys Maredudd Davies"
+format: 
+  revealjs:
+    smaller: true
+    theme: dark
+    slide-tone: true
+    chalkboard: true
+editor: visual
+---
+
+```{r, echo = FALSE}
+## Setup
+# Tip - if presentation does not work, install the "pacman" package first.
+pacman::p_load(tidyverse) # tidy data and make nice plots
+pacman::p_load(gt) # tidy tables
+pacman::p_load(rstatix) # stats package for easy t-tests
+pacman::p_load(report) # consistent stats reporting
+pacman::p_load(gghalves) # Use to load half plot geometries
+pacman::p_load(Hmisc) # Used to plot confidence intervals
+```
+
+## Session Aims
+
+-   Understanding what inferential statistics are, and why we use them.
+
+-   Applying the null hypothesis framework to our inferential statistics.
+
+-   Testing between two groups with the t-test.
+
+-   Running anova analysis with ANOVA.
+
+-   To critically evaluate null hypothesis tests and statistical analyses.
+
+
+
+## What are inferential statistics? 
+
+::: {.incremental}
+
+-   Inferential statistics builds on descriptive statistics to draw inferences about the world we live in.
+
+-   For example, if we gather the height of every person in this room, we can use the ***mean*** value to infer the ***mean height*** of the average University of Edinburgh student.
+
+-   We can also use inferential statistics to ***infer*** our predictions - this can be on the pattern and strength of an association, or on the difference between groups.
+
+-   These inferences are used to determine if the presence of an effect is statistically significant, and statistically meaningfull.
+
+:::
+
+## What are inferential statistics? 
+
+::: {.incremental}
+
+-   There are two main approaches for inferential statistics; [Frequentist statistics](https://michael-franke.github.io/intro-data-analysis/ch-05-01-frequentist-testing-overview.html), and [Bayesian statistics](https://statswithr.github.io/book/).
+
+-   Both have their [strengths and limitations](https://towardsdatascience.com/statistics-are-you-bayesian-or-frequentist-4943f953f21b), and the quant-curious amongst you should look both up! 
+
+- However, today we will be focusing on the frequentist approach to inferential statistics. 
+
+-   This is because frequentist statistics are most commonly used in the literature, and because it provides an easier introduction to the foundations of  statistics.
+
+:::
+
+## Ok... so what are frequentist statistics? 
+
+::: {.incremental}
+
+-   Draws statistical conclusions from sample data on the assumption that with increased frequency of participants and trials, we get closer to the inferring the "truth".
+
+-   Frequentist statistics are used to inform which action we should be taken.
+
+-   Frequentist methods rely on collecting representative samples to ensure reliable *inferences.*
+
+-   It is also very important with Frequentist statistics that our methods are very carefully designed.
+
+:::
+
+## What do we need for reliable inferential statistics? 
+
+::: {.incremental}
+
+-   Samples must be collected with random sampling designs, else the *inferences* will be biased.
+
+-   We need a "large enough" sample to ensure that our results are generalisable to the larger population.
+
+-   Our measures need to be **valid** and **accurate.**
+
+-   We need to make sure that the methods and analyses account for potential covariates that may affect the results.
+
+-   We need to know the strengths and limitations of the research as a whole - the theory, the methods, and the analytical framework.
+
+-   The **Null Hypothesis Testing** framework is *frequently* used to test *frequentist statistics*. (I promise to stop... one day).
+
+:::
+
+## What is Null Hypothesis Testing? (H0) 
+
+::: {.incremental}
+
+-   Null Hypothesis testing is a framework used to test scientific theories. 
+
+-   Null hypothesis testing compares the collected data to a hypothetical scenario where there is zero effect/difference observed.
+
+-   It's use aligns with Karl Popper's philosophy constituting a good scientific theory; **evidence cannot establish a scientific hypothesis, it can only “falsify” it**.
+
+-   The Null hypothesis framework is used as a means of falsifying a theory.
+
+:::
+
+## What is Null Hypothesis Testing? (H0) 
+
+::: {.incremental}
+
+- If the null hypothesis is **TRUE** we would expect to see **zero effect**/**zero difference** in our analyses.
+
+-   However, if the observed difference between the observed data and the null hypothesis is large enough, we can reject the **null hypothesis**.
+
+-   Rejecting the null hypothesis gives us evidence to support our **alternative hypothesis.**
+
+-   **BE CAREFULL** we can almost never accept a null hypothesis - as a true null effect is almost mathematically impossible. We can only ever fail to reject it.
+
+:::
+
+## What is Null Hypothesis Testing? (H0) 
+
+::: {.incremental}
+
+-   We have a wide range of null hypothesis tests at our disposal! From t-tests and chi squared, to correlations and poisson regressions.
+
+-   Like many things, these can be grouped into various families, such as the **general linear models** (i.e., t-tests, ANOVAs, linear regressions), and the **generalised linear models** (i.e., logistic regressions, poisson regressions, and awkwardly enough... linear regressions).
+
+-   Note: statisticians can do a lot of amazing things to help us understand the world. Naming statistical constructs is **not** one of them.
+
+-   Behind the scenes of these analyses, descriptive statistics are used to power the mathematics used for inferential statistics.
+
+-   The use of these descriptive statistics are often informing the "assumptions" of the analyses used.
+
+
+:::
+
+## Core components of Null Hypothesis Tests 
+
+::: {.incremental}
+
+All null hypothesis tests have the same core components to help us make inferences about the world:
+
+-   The effect size: this can be calculated in a variety of ways. It can refer to a difference between groups. It can refer to correlation coefficents or interaction effects. In lay terms - the effect size describes how big is the thing we're testing.
+
+-   Variance: this tells us how much "noise" there is in the sample. For example, standard deviation is used to let us know how far the average participant is from the overall average.
+
+-   The sample size and how many constructs are being tested - this will inform our *degrees of freedom (df).*
+
+-   The *p-value:* the probability of the observed effect being due to chance alone. It is sensitive to the effect size, to the variance, and to the sample size.
+
+
+:::
+
+## Core components of Null Hypothesis Tests 
+
+::: {.incremental}
+
+-   The **alpha cut-off**; as researchers we must make an informed decisions of the minimum **p-value** we want to observe to be confident of rejecting the null hypothesis.
+
+-   In theory, the **alpha** should be determined by *previous research*, our *expected effect sizes*, *expected variance*, *sample sizes* and the consequences of *type 1 errors/false positives*.
+
+-   In practice, different fields tend to use predetermined alpha levels to reject null hypotheses.
+
+-   For example, in psychology we tend to use .05 as the cut off. In clinical research  where human lives are implicated, we might use a stricter .01 alpha.
+
+-   Fun/scary fact: the reason why .05 is commonly used, is because Fischer suggested "1 in 20 should do the trick".
+
+- `*`This is somewhat paraphrased, but it was an off the cuff remark that started our craze with *p* < .05.
+
+:::
+
+## Example of a null hypothesis test in practice 
+
+::: {.incremental}
+
+Imagine we are working with the NHS. 
+
+A new experimental drug for treating asthma symptoms has been developed. The full clinical effects of the new experimental drug are unknown, but the preliminary research is promising. 
+
+We have been asked to decide if a new treatment intervention for asthma is worth implementing across the health service.
+
+This should fire plenty of questions for us:
+
+- What measure do we use to evaluate the effectiveness of the treatment? 
+
+- How will we describe the data? 
+
+- How do we decide if the new treatment is effective?
+
+- What is our hypothesis for the analysis?
+
+:::
+
+## Example of a null hypothesis test in practice (cont)
+
+::: {.incremental}
+
+*   In this case, the data was collected pre and post intervention. The outcome measure used was peak airflow (a commonly used medical test to help determine severity of asthma).
+
+*   As we expect the peak airflow to have a normal distribution, we intend to use mean values and standard deviations to describe the data.
+
+*   We have the following hypotheses for the analysis:
+
+*   The use of the New Drug will significantly improve peak airflow for asthma patients.
+
+:::
+
+## Experimental Treatment Group {.scrollable}
+
+
+### Collecting data / Simulating dat for treatment group
+
+```{r echo = TRUE}
+## Simulating treatment group
+set.seed(42) # setting seed to make replicable simulations
+
+### First measurement (prior to intervention)
+Pre <- round(  digits = 3,  #rounding data to 3 decimal places
+  rnorm(n = 20, mean = 400, sd = 50) # rnorm simulates normal distributions
+  )
+
+### Second measurement (after intervention)
+Post <- round(digits = 3,
+  rnorm(n = 20, mean = 500, sd = 65) # We're forcing the mean value to be greater in the second measurement
+  )
+
+### Labeling Treatment
+Treatment <- rep("New_Drug", times = 20) # gives us 20 rows labelled "New_Drug".
+
+### Combining Data
+New_Drug <- data.frame(cbind(Pre, Post, Treatment)) %>% # combining columns 
+  mutate(
+    Post = as.numeric(Post), Pre = as.numeric(Pre), # forcing data to be numeric
+    Peak_flow_difference = Post - Pre # calculating difference
+    ) %>%
+  pivot_longer( # forces our data to be long instead of wide
+    cols = c(Pre, Post),  # choosing the variables we want
+    names_to = "Time_Point", # name for the new column with the T titles
+    values_to = "Peak_flow" # name for the new column with associated values/numbers.
+    ) %>% 
+  mutate(
+         Treatment = as.factor(Treatment)
+         )
+```
+
+
+## Experimental Treatment Group
+
+::: {.incremental}
+
+### Checking descriptives 
+
+
+```{r echo= TRUE}
+#| output-location: column-fragment
+New_Drug %>% group_by(Time_Point) %>%
+  summarise(N = n(),
+            Mean = mean(Peak_flow),
+            SD = sd(Peak_flow)) %>%
+  gt() %>% fmt_number(decimals = 2)
+```
+
+
+Well this looks promising! It appears that the mean values of the peak flow increases after treatment.
+
+
+However, we also need to check our data visually to make sure that comparing mean values with the t-test is appropriate.
+
+:::
+
+## Experimental Treatment Group
+
+::: {.incremental}
+
+### Visual checking of assumptions
+
+
+```{r echo=TRUE}
+#| output-location: column-fragment
+
+ggplot(New_Drug,
+       aes(fill = Time_Point, x = Peak_flow)) +
+  geom_histogram(bins = 10) +
+   geom_vline(data = New_Drug, 
+               aes(xintercept = ave(Peak_flow, 
+               group = Time_Point, FUN = mean)), 
+               color = "red", linetype = "dashed", size = 1) +
+  facet_wrap(~ Time_Point) +
+  labs(title = "Experimental Treatment Peak Flow Histogram")
+```
+
+
+
+The histograms show us that the data approximates normal conditions. In both groups, the mean value (represented by the dashed red line) is close the central peal. It doesn't need to be perfect - we're just looking to make sure that comparing mean values are appropriate.
+
+Next up, we need to check our histograms to see if there is homogeneity of variance (that the spread of the data is equal in both groups).
+
+
+:::
+
+## New Drug Treatment Group
+
+::: {.incremental}
+
+### Visual checking of assumptions
+
+
+```{r echo=TRUE}
+#| output-location: column-fragment
+ggplot(New_Drug,
+       aes(x = Time_Point, y = Peak_flow, fill = Time_Point)) +
+  geom_boxplot() +
+  labs(title = "New Drug Treatment Peak Flow Boxplots")
+
+
+```
+
+
+There's no outliers. Yaay!
+
+As for homogeneity of variance, it is arguable that the spread of the data seems to be different across both time points. 
+
+Not to worry, R's default option for t-test can accommodate this.
+
+:::
+
+
+## Inferential null hypothesis test
+
+::: {.incremental}
+
+We're now in a position where we can infer from the descriptive statistics that the mean values of the Peak Flow breath test increases after treatment. But we will also notice that the standard deviation increased somewhat. I'm now curious about these questions:
+
+1.   What analysis do I use?
+
+2.   At what point do we decide if it's significant?
+
+3.   How do I run the analysis?
+
+4.   How do we interpret our results?
+
+5.   How do we decide if this increase is meaningful?
+
+:::
+
+## Paired Sample T-test
+
+### 1. What analysis do I use?
+
+::: {.incremental}
+
+-   At it's most basic, we are looking to see if there is a difference in peak flow between the two timepoints. 
+
+-   So, we will compare the ***mean*** values of the first time point against the ***mean*** values of the second time point.
+
+-   All the while, it accounts for variance across each group with the ***standard deviation***, whilst accounting for the sample size of each time point with ***n***, and accounting for individual paired effects.
+
+-   As we have two time points, and we are comparing means, and each participant is measured twice; we will use the ***paired samples t-test***. 
+
+:::
+
+## Paired Samples T-test
+
+### 2.  At what point do we decide if it's significant?
+
+::: {.incremental}
+
+-   But before running our analysis, we need to decide the level at which our p value should be considered significant. So we set out ***alpha***. 
+
+-   In this scenario, we will take a short cut based on standard practice in the field. As we are working with medical interventions, we decide **.01** should be our significance cut off.
+
+-   So only *p-values* ***less*** than **.01** will be considered significant. 
+
+:::
+
+## Paired Sample T-test
+
+### 3. How do I run the analysis?
+
+Back in the old days, you would have to calculate all the maths to run a paired samples t-test. Thankfully with R, we just run some code:
+
+```{r echo= TRUE}
+#| output-location: column-fragment
+
+t_test(
+    data = New_Drug, # set out data
+    Peak_flow ~ Time_Point, # Set the formula
+    paired = TRUE # We tell R that the time points are paired to each participant.
+       ) %>% gt() %>% fmt_number(decimals = 4)
+```
+
+## Paired Sample T-test
+
+### 4.How do we interpret our results?
+
+There's a lot of numbers, so we need to break it down into steps.
+
+```{r echo = FALSE}
+t_test(
+    data = New_Drug, # set out data
+    Peak_flow ~ Time_Point, # Set the formula
+    paired = TRUE # We tell R that the time points are paired to each participant.
+       ) %>% gt() %>% fmt_number(decimals = 4)
+```
+
+::: {.incremental}
+
+- The *p* value is **.0003**. This is ***less*** than our alpha of **.01**. So we can be confident that our results are significant. 
+
+- This means we can reject the null hypothesis.
+
+- The *df* is the degrees of freedom. It is the number of participants relative to the number of predictor/independent variables.
+
+- The statistic is here is the *t-statistic*. As it is negative, we can infer that pre-intervention is less than the post intervention measure.
+
+:::
+
+## Paired Sample T-test
+
+### 4.How do we interpret our results?
+
+
+```{r echo = FALSE}
+t_test(
+    data = New_Drug, # set out data
+    Peak_flow ~ Time_Point, # Set the formula
+    paired = TRUE # We tell R that the time points are paired to each participant.
+       ) %>% gt() %>% fmt_number(decimals = 4)
+```
+
+```{r echo= FALSE}
+New_Drug %>% group_by(Time_Point) %>%
+  summarise(Mean = mean(Peak_flow),
+            SD = sd(Peak_flow)) %>%
+  gt() %>% fmt_number(decimals = 2)
+```
+
+
+::: {.incremental}
+
+- We are interested in the magnitude of the *t-statistic*. The positive/negative value tells us the direction of the difference relative to the first measurement. 
+
+- This means we can flip it over to be positive if we would rather describe how much the 2nd measurement changed.
+
+- We can report this along with our descriptive statistics: At the second time point (*Mean* = 482.39, *sd* = 72.13) significantly increased (*t* = 4.49, *df* = 19, *p* = .0003) in comparison to the first time point (*Mean* = 409.60, *sd* = 65.63).
+
+- Great! The results are significant! But how do we decide if they are meaningful?
+
+:::
+
+## Paired Sample T-test {.scrollable}
+
+### 4. How do we interpret the results? (Data vis)
+
+```{r}
+#| output-location: column-fragment
+#| echo: TRUE
+## step 1: calculate confidence interval manually
+
+# Mean difference
+mean_diff <- mean(New_Drug$Peak_flow_difference)
+
+# Standard error of the mean difference
+se_diff <- sd(New_Drug$Peak_flow_difference) / sqrt(nrow(New_Drug))
+
+# As our alpha is .01, we need a .99 Confidence interval
+ci <- qt(0.99, df = nrow(New_Drug) - 1) * se_diff
+lower_ci <- mean_diff - ci
+upper_ci <- mean_diff + ci
+
+# Making an extra data set for the plot
+
+# Data frame for plotting
+plot_data <- New_Drug %>%
+  group_by(Time_Point) %>%
+   summarise(
+    mean = mean(Peak_flow),
+    lower_ci = mean(Peak_flow) - ci,
+    upper_ci = mean(Peak_flow) + ci
+  )
+
+
+ggplot(data = plot_data,
+       aes(x = Time_Point, y = mean, fill = Time_Point)) +
+  geom_half_violin(data = New_Drug,
+       aes(x = Time_Point, y = Peak_flow),
+       alpha = .4)+
+  geom_errorbar(data = plot_data,
+       aes(ymin = lower_ci, ymax = upper_ci, color = Time_Point),
+       width = 1, size = 1) +
+  stat_summary(data = plot_data,
+       geom = "point", fun = "mean", size = 3,
+       aes(color = Time_Point)) +
+  theme(legend.position = "none") +
+  labs(title = "Paired Samples t-test Confidence Interval plot",
+       subtitle = "New Drug Condition",
+       y = "Peak Airflow",
+       x = "Measurement Time Point") + 
+  theme_minimal()
+```
+
+## Paired Sample T-test
+
+### 5. How do we decide if this increase is meaningful? (cont.)
+
+::: {.incremental}
+
+-   In practice, this is a very tricky question. There are many factors to consider; such as the quality and validity of the methods and the field you are researching. 
+
+-   However, we do have some statistical tricks to help us. Many inferential statistics can be made into a ***standardised effect size***. 
+
+-   Standardised effect sizes have been **standardised**. That is, they have been converted to a scale that allows for easy comparisons with other research, regardless of the measures they used.
+
+-   The standardised effect size for the t-test, is known as ***Cohen's D***.
+
+-   ***Cohen's D*** values greater than **.30** are considered ***small**. Values greater than **.50** are considered **moderate**, and values greater than **.80** are considered **large**.
+
+:::
+
+## Paired Sample T-test
+
+### 5. How do we decide if this increase is meaningful?
+
+So let's run our Cohen's D with the `cohens_d()` function of the `rstatix` package. 
+
+```{r echo=TRUE}
+cohens_d(data = New_Drug, 
+       Peak_flow ~ Time_Point, 
+       paired = TRUE) %>% gt() %>% fmt_number(decimals = 2)
+```
+
+Wow! .99 is a huge effect size! Seems like the new intervention is very effective...
+
+Or does it?
+
+What else might we need to know to decide if the result is meaningful?
+
+## Comparing with Control Condition
+
+::: {.incremental}
+
+* Who here knows about the placebo effect?
+
+* The placebo effect is when a positive effect occurs because we believe it will happen. 
+
+* Placebo effects will occur with ***all*** interventions. 
+
+* As researchers, we need to distinguish how much of the effect is due to the intervention, and how much is due to the placebo.
+
+:::
+
+## Comparing with Control Condition
+
+::: {.incremental}
+
+* To account for the placebo effect, we compare our results with a placebo condition. 
+
+* Thankfully, data collection for the placebo group was conducted.
+
+* Lets repeat our steps from the repeated measures test to determine if there is a significant and meaningful effect in the placebo group.
+
+::: 
+
+## Comparing with Control Condition {.scrollable}
+
+### Simulating Placebo group
+
+```{r}
+#| echo: TRUE
+
+## Simulating placebo group
+set.seed(42)
+### First measurement (prior to intervention)
+Pre <- round(
+  rnorm(n = 20, mean = 425, sd = 55),
+  digits = 3)
+
+### Second measurement (after intervention)
+Post <- round(
+  rnorm(n = 20, mean = 460, sd = 60),
+  digits = 3)
+
+### Labelling treatment
+Treatment <- rep("Placebo", times = 20)
+
+### Combining data
+Placebo <- data.frame(cbind(Pre, Post, Treatment)) %>% 
+  mutate(
+    Post = as.numeric(Post), Pre = as.numeric(Pre),
+    Peak_flow_difference = Post - Pre
+    )  %>%
+  pivot_longer( # forces our data to be long instead of wide
+    cols = c(Pre, Post),  # choosing the variables we want
+    names_to = "Time_Point", # name for the new column with the T titles
+    values_to = "Peak_flow" # name for the new column with associated values/numbers.
+    ) %>% 
+  mutate(
+         Treatment = as.factor(Treatment)
+         )
+``` 
+
+
+## Comparing with Control Condition
+
+
+### Checking descriptives
+
+
+```{r}
+#| echo: TRUE
+#| output-location: 'column-fragment'
+Placebo %>% group_by(Time_Point) %>%
+  summarise(N = n(),
+            Mean = mean(Peak_flow),
+            SD = sd(Peak_flow)) %>%
+  gt() %>% fmt_number(decimals = 2)
+```
+
+## Comparing with Control Condition
+### Checking Data visualisation
+
+Once again, our assumptions need to be met.
+
+```{r}
+#| echo: TRUE
+#| output-location: 'column-fragment'
+
+ggplot(Placebo,
+       aes(fill = Time_Point, x = Peak_flow)) +
+  geom_histogram(bins = 10) +
+     geom_vline(data = Placebo, 
+               aes(xintercept = ave(Peak_flow, 
+               group = Time_Point, FUN = mean)), 
+               color = "red", linetype = "dashed", size = 1) +
+  facet_wrap(~ Time_Point)
+```
+
+The data looks to be normally distributed, and the mean value aligns with the peaks of the histogram. Looks like we're safe on the normality assumption. Time to check for outliers and the variance.
+
+## Comparing with Control Condition
+### Checking Data visualisation
+
+```{r}
+#| echo: TRUE
+#| output-location: 'column-fragment'
+ggplot(Placebo,
+       aes(x = Time_Point, y = Peak_flow, fill = Time_Point)) +
+  geom_boxplot() 
+
+```
+
+
+
+## Comparing with Control Condition
+### Paired Samples t-test
+
+```{r echo = FALSE}
+#| echo: TRUE
+#| output-location: 'column-fragment'
+t_test(
+    data = Placebo, # set out data
+    Peak_flow ~ Time_Point, # Set the formula
+    paired = TRUE # We tell R that the time points are paired to each participant.
+       ) %>% gt() %>% fmt_number(decimals = 3)
+```
+
+```{r}
+#| echo: TRUE
+#| output-location: 'column-fragment'
+cohens_d(data = Placebo, 
+       Peak_flow ~ Time_Point, 
+       paired = TRUE) %>% gt() %>% fmt_number(decimals = 2)
+```
+
+Our analysis shows us that the placebo group failed to reject the null hypothesis (*p* = .63), and the effect size was negligible (*D* = .11).
+
+It looks like the placebo condition had little effect on peak airflow in comparison to the new drug.
+
+## Control Condition {.scrollable}
+
+### How do we interpret the results? (Data vis)
+
+```{r}
+#| output-location: column-fragment
+#| echo: TRUE
+## step 1: calculate confidence interval manually
+
+# Mean difference
+mean_diff <- mean(Placebo$Peak_flow_difference)
+
+# Standard error of the mean difference
+se_diff <- sd(Placebo$Peak_flow_difference) / sqrt(nrow(New_Drug))
+
+# As our alpha is .01, we need a .99 Confidence interval
+ci <- qt(0.99, df = nrow(Placebo) - 1) * se_diff
+lower_ci <- mean_diff - ci
+upper_ci <- mean_diff + ci
+
+# Making an extra data set for the plot
+
+# Data frame for plotting
+plot_data <- Placebo %>%
+  group_by(Time_Point) %>%
+   summarise(
+    mean = mean(Peak_flow),
+    lower_ci = mean(Peak_flow) - ci,
+    upper_ci = mean(Peak_flow) + ci
+  )
+
+
+ggplot(data = plot_data,
+       aes(x = Time_Point, y = mean, fill = Time_Point)) +
+  geom_half_violin(data = Placebo,
+       aes(x = Time_Point, y = Peak_flow),
+       alpha = .4)+
+  geom_errorbar(data = plot_data,
+       aes(ymin = lower_ci, ymax = upper_ci, color = Time_Point),
+       width = 1, size = 1) +
+  stat_summary(data = plot_data,
+       geom = "point", fun = "mean", size = 3,
+       aes(color = Time_Point)) +
+  theme(legend.position = "none") +
+  labs(title = "Paired Samples t-test Confidence Interval plot",
+       subtitle = "Placebo Condition",
+       y = "Peak Airflow",
+       x = "Measurement Time Point") + 
+  theme_minimal()
+```
+
+## But is that enough?
+
+::: {.incremental}
+
+-   We have now used the paired samples t-test on both the new drug group, and the placebo group. 
+
+-   Within the new drug group, there was a significant difference between the pre-trial and post-trial measurments.
+
+-   Within the placebo group, there was no significant difference between the pre-trial and post-trial measurements. 
+
+-   This is all promising for the new drug. But we still need to compared the new drug with the placebo with a statistical analysis: the ***independent samples t-test***.
+
+:::
+
+## The independent samples t-test
+
+::: {.incremental}
+
+-   The ***independent samples t-test*** is used to compare mean values between groups. 
+
+-   Like the ***paired samples t-test*** it compares mean values whilst accounting for the variance and sample size of both groups.
+
+-   For this reason, the ***independent samples t-test*** assumes that data is ***normally distributed***, and that groups are ***independent***.
+
+-   Traditionally it also assumed that variance needed to be equal between both groups. However, R uses the updated **Welch's** t-test as the default t-test.
+
+-   The **Welch's** t-test is reliable when variance is **equal** or **unequal**, making it a [robust choice](https://research.tue.nl/en/publications/why-psychologists-should-by-default-use-welchs-t-test-instead-of-). 
+
+-   As this analysis is an additonal test on our theory, we need an additional hypothesis. 
+
+-   We hypothesis that the New Drug Treatment will improve the peak airflow to a greater extent than the placebo treatment.
+
+:::
+
+## The independent samples t-test
+
+### Preparing data for analysis
+
+For this step, we need to combine our new drug and placebo datasets. We achieve this with the `rbind()` function, which combines the rows of both datasets. 
+
+```{r}
+#| echo: TRUE
+#| output-location: 'column-fragment'
+
+## Combind the rows with rbind
+Combined_data <- rbind(New_Drug, Placebo) 
+
+summary(Combined_data$Treatment) # Here we see a potential issue: Because we had 20 participants at each time point, we are given the impression of having 80 participants (20 for Pre in both treatments, 20 in Post in both treatments). So some tidying is needed.
+
+# Preparing data for analysis
+ind_t_test_data <- Combined_data %>% 
+  select(Treatment, Peak_flow_difference) %>% #selecting the variables for analysis
+  unique() # removing duplicates
+
+summary(ind_t_test_data$Treatment) # Now the data accuratley represents our research.
+```
+
+## The independent samples t-test
+### Checking descriptive statistics and plots
+```{r}
+#| echo: TRUE
+#| output-location: 'column-fragment'
+
+ind_t_test_data %>% 
+  group_by(Treatment) %>% 
+  summarise(n = n(),
+            Mean_Difference = mean(Peak_flow_difference),
+            SD_Difference = sd(Peak_flow_difference)) %>%
+  gt() %>% fmt_number(decimals = 3)
+```
+
+## The independent samples t-test
+### Checking Data Visualisation
+
+```{r echo=TRUE}
+#| echo: TRUE
+#| output-location: 'column-fragment'
+
+ggplot(ind_t_test_data,
+       aes(fill = Treatment, x = Peak_flow_difference)) +
+  geom_histogram(bins = 15) +
+     geom_vline(data = ind_t_test_data, 
+               aes(xintercept = ave(Peak_flow_difference, 
+               group = Treatment, FUN = mean)), 
+               color = "red", linetype = "dashed", linewidth = 1) +
+  facet_wrap(~ Treatment) +
+  labs(title = "Differences in Peak Flow Histogram")
+```
+
+The histogram allows to test the normality of the data - which is important as the t-test compares mean values (which are only meaningfull when data is normally distributed).
+
+## The independent samples t-test
+### Checking Data Visualisation
+
+```{r echo=TRUE}
+#| echo: TRUE
+#| output-location: 'column-fragment'
+
+ggplot(ind_t_test_data,
+       aes(x = Treatment, y = Peak_flow_difference, fill = Treatment)) +
+  geom_boxplot() +
+  labs(title = "Experimental Treatment Peak Flow Boxplots")
+
+```
+
+Meanwhile, we use the boxplots to check for outliers in the data, and to help us determine if there is equal variance in the dataset (along with the SD values).
+
+## The independent samples t-test
+### Conducting the analysis
+
+This time we use the `t_test()` function  again. But this time we set the `paired` command to `FALSE`, as our data is not paired this time. 
+
+```{r}
+#| echo: TRUE
+#| output-location: 'column-fragment'
+
+t_test(data = ind_t_test_data, 
+       Peak_flow_difference ~ Treatment, paired = FALSE) %>%
+  gt() %>% fmt_number(decimals = 3)
+```
+
+```{r}
+#| echo: TRUE
+#| output-location: 'column-fragment'
+cohens_d(data = ind_t_test_data, 
+       Peak_flow_difference ~ Treatment, 
+       paired = TRUE) %>% gt() %>% fmt_number(decimals = 2)
+```
+
+## The independent samples t-test
+
+:::: {.columns}
+
+### Interpreting the analysis
+
+::: {.column width="40%"}
+
+```{r echo = FALSE}
+t_test(data = ind_t_test_data, 
+       Peak_flow_difference ~ Treatment) %>% 
+  gt() %>% fmt_number(decimals = 4)
+
+cohens_d(data = ind_t_test_data, 
+       Peak_flow_difference ~ Treatment, 
+       paired = FALSE) %>% gt() %>% fmt_number(decimals = 2)
+
+ind_t_test_data %>% 
+  group_by(Treatment) %>% 
+  summarise(n = n(),
+            Mean_Difference = mean(Peak_flow_difference),
+            SD_Difference = sd(Peak_flow_difference),
+            se = SD_Difference / sqrt(n),
+    ci = qt(0.98, df = n - 1) * se,
+    lower_ci = Mean_Difference - ci,
+    upper_ci = Mean_Difference + ci) %>%
+  gt() %>% fmt_number(decimals = 3)
+```
+
+:::
+
+::: {.column width="60%"}
+
+This is very similar to interpreting the paired samples t-test results. Only this time, we are comparing between the groups as opposed to comparing between time points. As this data still involves clinical trials, we are still using the alpha cutoff of .01. 
+
+The analysis shows a signficant difference between the placebo and new drug treatment (*t*(38.00) = 2.78, *p* =.008), displaying a large effect size (*D* = .88). The change is peak flow of the ***new drug*** treatment (*M* = 72.79, *sd* = 73.30) was greater than the change of peak flow within the ***placebo*** treatment (*M* = 8.19 , *sd* = 73.79). 
+
+:::
+
+::::
+
+## Paired Sample T-test {.scrollable}
+
+### Ventolin COndition (Data vis)
+
+```{r}
+#| output-location: column-fragment
+#| echo: TRUE
+## step 1: calculate confidence interval manually
+
+# Mean difference
+mean_diff <- mean(ind_t_test_data$Peak_flow_difference)
+
+# Standard error of the mean difference
+se_diff <- sd(ind_t_test_data$Peak_flow_difference) / sqrt(nrow(ind_t_test_data))
+
+#  As the test is two tailed, we also need to divide by two. This will plot our adjusted p value.
+ci <- qt(.99, 
+         df = nrow(ind_t_test_data) - 1) * se_diff
+lower_ci <- mean_diff - ci
+upper_ci <- mean_diff + ci
+
+# Making an extra data set for the plot
+
+# Data frame for plotting
+plot_data <- ind_t_test_data %>%
+  group_by(Treatment) %>%
+   summarise(
+    mean = mean(Peak_flow_difference),
+    lower_ci = mean(Peak_flow_difference) - ci,
+    upper_ci = mean(Peak_flow_difference) + ci
+  )
+
+
+ggplot(data = plot_data,
+       aes(x = Treatment, y = mean, fill = Treatment)) +
+  geom_half_violin(data = ind_t_test_data,
+       aes(x = Treatment, y = Peak_flow_difference),
+       alpha = .4)+
+  geom_errorbar(data = plot_data,
+       aes(ymin = lower_ci, ymax = upper_ci, color = Treatment),
+       width = 1, size = 1) +
+  stat_summary(data = plot_data,
+       geom = "point", fun = "mean", size = 3,
+       aes(color = Treatment)) +
+  labs(title = "Independent Samples Confidence Interval plot",
+       y = "Peak Airflow",
+       x = "Treatment") + 
+  theme_minimal() +
+  theme(legend.position = "none") 
+```
+
+
+## The independent samples t-test
+### Are the stats meaningfull?
+
+We now have statistically significant evidence from our ***paired samples t-test*** (within subjects) and our ***independent samples t-test*** (between subjects) indicating that our new drug is effective at increasing the peak airflow measure of asthma sufferers. 
+
+Many researchers would consider this to be solid evidence that the NHS should implement the new drug. However, one grumpy researcher in the room is still sceptical. 
+
+Why might they be sceptical?
+
+## Critically evaluating research
+
+::: {.incremental}
+
+-   What else might we need to know to determine if the new drug needs implementing?
+
+-   There are the pragmatic factors to consider such as costs. 
+
+-   There are health and wellbeing factors to consider such as side effects and frequency of treatment. 
+
+-   We also need to consider how this new drug compares to existing treatment options. 
+
+-   There are plenty of treatment options that are more effective than the sugar pill placebo, so we need further evidence to make an informed decision. 
+
+-   The grumpy researcher in the room insists that we collect additional data on the current recommended treatment for asthma; the Ventolin inhaler. Why would they argue for this?
+
+-   As the analysis is exploratory this time, we do not set a hypothesis. Yet, we will still interpret the results with the null hypothesis framework.
+
+:::
+
+## Addressing the critical evaluation
+
+Turns out, the grumpy researcher makes a fair point. Just because something is more effective than a placebo, does not mean it should implemented. 
+
+By comparing the new drug against the commonly used treatment, we can determine if the risks and costs of implementing a new drug can be justified by its potential benefits as a treatment method. 
+
+## Collecting data {.scrollable}
+
+```{r}
+#| echo: TRUE
+## Simulating Ventolin treatment
+set.seed(42)
+### First measurement (prior to intervention)
+Pre <- round(
+  rnorm(n = 20, mean = 415, sd = 50),
+  digits = 3)
+
+### Second measurement (after intervention)
+Post <- round(
+  rnorm(n = 20, mean = 550, sd = 30),
+  digits = 3)
+
+### Labelling treatment
+Treatment <- rep("Ventolin", times = 20)
+
+### Combining data
+Ventolin <- data.frame(cbind(Pre, Post, Treatment)) %>% 
+  mutate(
+    Post = as.numeric(Post), Pre = as.numeric(Pre),
+    Peak_flow_difference = Post - Pre
+    )  %>%
+  pivot_longer( # forces our data to be long instead of wide
+    cols = c(Pre, Post),  # choosing the variables we want
+    names_to = "Time_Point", # name for the new column with the T titles
+    values_to = "Peak_flow" # name for the new column with associated values/numbers.
+    ) %>% 
+  mutate(
+         Treatment = as.factor(Treatment)
+         )
+``` 
+
+## Paired samples t-test
+
+### Checking desciptives
+
+```{r}
+#| echo: TRUE
+#| output-location: 'column-fragment'
+Ventolin %>% group_by(Time_Point) %>%
+  summarise(Mean = mean(Peak_flow),
+            SD = sd(Peak_flow)) %>%
+  gt() %>% fmt_number(decimals = 2)
+```
+
+## Paired samples t-test
+
+### Data visualisation
+
+```{r}
+#| echo: TRUE
+#| output-location: 'column-fragment'
+
+ggplot(Ventolin,
+       aes(fill = Time_Point, x = Peak_flow)) +
+  geom_histogram(bins = 10) +
+     geom_vline(data = Ventolin, 
+               aes(xintercept = ave(Peak_flow, 
+               group = Time_Point, FUN = mean)), 
+               color = "red", linetype = "dashed", size = 1) +
+  facet_wrap(~ Time_Point)
+```
+
+```{r echo=TRUE}
+#| echo: TRUE
+#| output-location: 'column-fragment'
+
+ggplot(Ventolin,
+       aes(x = Time_Point, y = Peak_flow, fill = Time_Point)) +
+  geom_boxplot() +
+  labs(title = "Ventolin Treatment Peak Flow Boxplots")
+
+```
+
+## Paired samples t-test
+
+First we check if there is a significant improvement in airflow between the pre and post intervention measurements.
+
+```{r echo = FALSE}
+t_test(
+    data = Ventolin, # set out data
+    Peak_flow ~ Time_Point, # Set the formula
+    paired = TRUE # We tell R that the time points are paired to each participant.
+       ) %>% gt() %>% fmt_number(decimals = 3)
+
+cohens_d(data = Ventolin, 
+       Peak_flow ~ Time_Point,  
+       paired = TRUE) %>% gt() %>% fmt_number(decimals = 2)
+```
+
+We can see that ventolin also significantly improves peak airflow, and this produces a large effect. Now time to see how ventolin compares with the other treatment groups.
+
+## Paired Sample T-test {.scrollable}
+
+### Ventolin COndition (Data vis)
+
+```{r}
+#| output-location: column-fragment
+#| echo: TRUE
+## step 1: calculate confidence interval manually
+
+# Mean difference
+mean_diff <- mean(Ventolin$Peak_flow_difference)
+
+# Standard error of the mean difference
+se_diff <- sd(Ventolin$Peak_flow_difference) / sqrt(nrow(Ventolin))
+
+# As our alpha is .01, we need a .99 Confidence interval
+ci <- qt(0.99, df = nrow(Ventolin) - 1) * se_diff
+lower_ci <- mean_diff - ci
+upper_ci <- mean_diff + ci
+
+# Making an extra data set for the plot
+
+# Data frame for plotting
+plot_data <- Ventolin %>%
+  group_by(Time_Point) %>%
+   summarise(
+    mean = mean(Peak_flow),
+    lower_ci = mean(Peak_flow) - ci,
+    upper_ci = mean(Peak_flow) + ci
+  )
+
+
+ggplot(data = plot_data,
+       aes(x = Time_Point, y = mean, fill = Time_Point)) +
+  geom_half_violin(data = Ventolin,
+       aes(x = Time_Point, y = Peak_flow),
+       alpha = .4)+
+  geom_errorbar(data = plot_data,
+       aes(ymin = lower_ci, ymax = upper_ci, color = Time_Point),
+       width = 1, size = 1) +
+  stat_summary(data = plot_data,
+       geom = "point", fun = "mean", size = 3,
+       aes(color = Time_Point)) +
+  theme(legend.position = "none") +
+  labs(title = "Paired Samples t-test Confidence Interval plot",
+       subtitle = "Ventolin Condition",
+       y = "Peak Airflow",
+       x = "Measurement Time Point") + 
+  theme_minimal()
+```
+
+
+## Combining data
+
+```{r}
+#| echo: TRUE
+#| output-location: 'column-fragment'
+
+## Combining the rows with rbind
+Combined_data <- rbind(New_Drug, Placebo, Ventolin) 
+
+summary(Combined_data$Treatment) # again we have inflated the sample number - so additional tidying needed
+```
+
+```{r}
+#| echo: TRUE
+#| output-location: 'column-fragment'
+# Data tidying
+anova_data <- Combined_data %>%
+  select(Treatment, Peak_flow_difference) %>% #select relevant variables
+  unique() # remove duplicates
+
+summary(anova_data$Treatment)
+```
+
+## Summary statistics and checking assumptions
+
+```{r}
+#| echo: TRUE
+#| output-location: 'column-fragment'
+
+anova_data %>% 
+  group_by(Treatment) %>% 
+  summarise(n = n(),
+            Mean_Difference = mean(Peak_flow_difference),
+            SD_Difference = sd(Peak_flow_difference)) %>%
+  gt() %>% fmt_number(decimals = 3)
+```
+
+## Visual Checking of Assumpitons 
+
+```{r}
+#| echo: TRUE
+#| output-location: 'column-fragment'
+#| 
+ggplot(anova_data,
+       aes(x = Peak_flow_difference, fill = Treatment)) +
+  geom_histogram(bins = 15)+
+  facet_wrap(~Treatment)
+```
+
+```{r}
+#| echo: TRUE
+#| output-location: 'column-fragment'
+#| 
+ggplot(anova_data,
+       aes( x = Treatment, y = Peak_flow_difference, fill = Treatment)) +
+  geom_boxplot()
+
+```
+
+
+## ANOVA method
+### Understanding ANOVA
+
+Previously, we used the t-test to compare the means of 2 groups. This time, we want to compare the means of 3 groups. T-test's can only do 1 vs 1 comparisons, so we need to use an adjusted method to account for conditions where there are 3+ groups in our data. 
+
+Enter the ANOVA.
+
+-   The analysis of variance (ANOVA) is part of the general linear family (along with t-test's and linear regressions). 
+
+-   Despite its variance focused name... it is often used to compare mean values, as opposed to variance.
+
+-   ANOVA uses the sum of squared values to compare the extent to which the mean value of each group differs from the grand mean of all the groups.
+
+-   Today, we are using ANOVA to compare the difference in Peak Airflow between the New Drug, the Placebo, and Ventolin treatment options.
+
+## ANOVA
+### Conducting the analysis
+
+```{r}
+#| echo: TRUE
+#| output-location: 'column-fragment'
+
+ANOVA <- aov(Peak_flow_difference ~ Treatment, # set formula
+             data = anova_data) #set the data used
+
+summary(ANOVA) # view summary of results
+```
+
+Amazing! It's significant. Now what?
+
+The ANOVA tells us there is a significant difference in mean values across ***all*** of the treatment groups.
+
+However, it does not tell us where the difference is, and what the difference is. 
+
+For this, we need ***Post-hoc testing***.
+
+## ANOVA
+### Post-hoc testing
+
+::: {.incremental}
+
+-   Post-hoc testing sounds very sophisticated. 
+
+-   In practice, it is just repeating our independent samples t-test from earlier, but this time between every **treatment** * **treatment** combination in our dataset. 
+
+-   As this is repeating multiple statistical tests, it can theoretically increase our chances of a ***type 1*** error (a false positive). To address this risk, a correction is applied to the ***p*** value. 
+
+-   We will be using the Tukey HSD correction post hoc test, which increases the ***p*** value for every group being compared. The maths are a little complicated, but can be found here. 
+
+-   It is recommended for research as it brings a good balance between statistical power and preventing ***type 1*** errors.
+
+:::
+
+## ANOVA
+### Post-hoc testing
+
+```{r}
+#| echo: TRUE
+#| output-location: 'column-fragment'
+
+tukey_hsd(ANOVA) %>% 
+  select(-`p.adj.signif`) %>%
+  gt() %>% 
+  fmt_number(decimals = 4)
+
+```
+
+## ANOVA {.scrollable}
+
+:::: {.columns}
+
+### Interpreting the analysis {.smaller}
+
+::: {.column width="40%"}
+
+```{r}
+
+anova_data %>% 
+  group_by(Treatment) %>% 
+  summarise(n = n(),
+            Mean_Difference = mean(Peak_flow_difference),
+            SD_Difference = sd(Peak_flow_difference)) %>%
+  gt() %>% fmt_number(decimals = 3)
+
+broom::tidy(ANOVA) %>% select(-sumsq, -meansq) %>% 
+  gt() %>% fmt_number(decimals = 4)
+
+tukey_hsd(ANOVA, stars = FALSE) %>% 
+  select(-term, -null.value, -`p.adj.signif`) %>%
+  gt() %>% 
+  fmt_number(decimals = 4)
+
+```
+
+:::
+
+
+::: {.column width="60%"}
+
+* An alpha of .01 was set for the analysis.
+
+* Between samples ANOVA demonstrated a significant difference between treatment groups (*F* (2,57) = 12.60, *p* < .001). Tukey's post hoc test of honest differences  was applied. 
+
+* The Ventolin treatment (*M* = 117.27, *sd* = 59.21) significantly improved peak airflow (*p* < .001) in comparison to the Placebo treatment (*M* = 8.19, *sd* = 72.83). 
+
+* No significant difference (*p* = .012) was reported between the New Drug (*M* = 72.79, *sd* = 73.30) and the Placebo treatment (*M* = 8.18, *sd* = 73.79).
+
+* No significant difference (*p* = .1113) was reported between Ventolin (*M* = 117.27, *sd* = 59.21) and the New Drug (*M* = 72.79, *sd* = 73.30).
+
+:::
+
+::::
+
+## Paired Sample T-test {.scrollable}
+
+### Ventolin COndition (Data vis)
+
+```{r}
+#| output-location: column-fragment
+#| echo: TRUE
+## step 1: calculate confidence interval manually
+
+# Mean difference
+mean_diff <- mean(anova_data$Peak_flow_difference)
+
+# Standard error of the mean difference
+se_diff <- sd(anova_data$Peak_flow_difference) / sqrt(nrow(anova_data))
+
+# As a correction was used, we need divide our alpha by the number of groups (i.e., 3). As the test is two tailed, we also need to divide by two. This will plot our adjusted p value.
+ci <- qt(1 -(.01/2/3), 
+         df = nrow(anova_data) - 1) * se_diff
+lower_ci <- mean_diff - ci
+upper_ci <- mean_diff + ci
+
+# Making an extra data set for the plot
+
+# Data frame for plotting
+plot_data <- anova_data %>%
+  group_by(Treatment) %>%
+   summarise(
+    mean = mean(Peak_flow_difference),
+    lower_ci = mean(Peak_flow_difference) - ci,
+    upper_ci = mean(Peak_flow_difference) + ci
+  )
+
+
+ggplot(data = plot_data,
+       aes(x = Treatment, y = mean, fill = Treatment)) +
+  geom_half_violin(data = anova_data,
+       aes(x = Treatment, y = Peak_flow_difference),
+       alpha = .4)+
+  geom_errorbar(data = plot_data,
+       aes(ymin = lower_ci, ymax = upper_ci, color = Treatment),
+       width = 1, size = 1) +
+  stat_summary(data = plot_data,
+       geom = "point", fun = "mean", size = 3,
+       aes(color = Treatment)) +
+  theme(legend.position = "none") +
+  labs(title = "ANOVA Confidence Interval plot",
+       y = "Peak Airflow",
+       x = "Treatment") + 
+  theme_minimal()
+```
+
+## Addressing the research question
+
+::: {.incremental}
+
+So, we have now finished our statistical analyses. We can conclude the following about our treatment options:
+
+* The new drug significantly improves peak airflow between pre and post intervention measures.
+
+* The new drug significantly improves the change in airflow in comparison to the placebo.
+
+* Ventolin also significantly improves peak airflow between pre and post intervention measures.
+
+* ANOVA analysis demonstrated a significant difference in change of peak airflow between the 3 groups.
+
+* Tukey HSD posthoc tests demonstrates that Ventolin significantly increases in the change of peak airflow in comparision to placebo.
+
+* However, with the Tukey correction, there is no longer a significant difference between the New drug and Placebo treatment at the **alpha of .01**.
+
+* There is also ***no significant difference*** between ventolin and the new drug.
+
+:::
+
+## Implications
+
+::: {.incremental}
+
+-   How much impact does setting the alpha have on the significance of our analysis?
+
+
+-   How much impact does setting the alpha have on the meaningfulness of our analyses?
+
+-   What were the strengths of this research?
+
+-   What were the limitations of this research?
+
+
+-   Considering the findings, do we think the NHS should implement the new drug?
+
+
+-   What other analyses might you consider to inform this decision? (both quantitative and qualitative).
+
+:::
+
+## Recap
+
+::: {.incremental}
+
+That was a whirlwind of stats! 
+
+Today, we covered:
+
+* Understanding what inferential stats are, and why we use them.
+
+* Appreciating there are 2 main philosophies of using inferential stats, but ***frequentist*** Null hypothesis testing is the most *frequently* used approach.
+
+* Understanding Null Hypothesis testing, and it's general structure.
+* Applying Null Hypothesis testing to research questions.
+
+* Using and interpreting paired samples t-test's and independent samples t-test's in R.
+
+* Using and interpreting ANOVA's in R.
+
+* Critically evaluating our analytical methods.
+
+:::
+
+## Useful reading/resources {.scrollable}
+
+* [https://quantitudepod.org/](https://quantitudepod.org/) : Amazing nerdy podcast on a variety of statistical topics. Use their search bar, and dive into the discussion between the quantitative clinical/social science researchers.
+
+* [The Reviewer's Guide to Quantitative Methods in the Social Sciences](https://www.taylorfrancis.com/books/edit/10.4324/9781315755649/reviewer-guide-quantitative-methods-social-sciences-gregory-hancock-ralph-mueller-laura-stapleton?context=ubx&refId=2be97ebb-df58-483a-b7c0-42b4d5cd2b3a): This online textbook is a goldmine. It details what reviewers look for in justifying, conducting, and presenting analyses in journal papers/dissertations. Use it to be a step ahead in your own work.
+
+* [An intro to Data Analysis](https://michael-franke.github.io/intro-data-analysis/general-introduction.html). In depth discussions and explanations on Bayesian and Frequentist statistics with R. 
+
+* [Bad Science, Ben Goldacre](https://www.amazon.co.uk/Bad-Science-Ben-Goldacre/dp/000728487X/?tag=bs0b-21). A great read on tricks and tips on critically evaluating research design and statistics. I strongly reccomend finding it if you find this topic to be intimidating, as the book is funny, informative and makes many great recommendations of critically evaluating science.
+
+* [Leek, J. T., & Peng, R. D. (2015). Statistics: P values are just the tip of the iceberg. Nature, 520(7549), 612-612.](https://www.nature.com/articles/520612a). (For a critical evaluation of the p-value).
+
+* [Schneider, J. W. (2015). Null hypothesis significance tests. A mix-up of two different theories: the basis for widespread confusion and numerous misinterpretations. Scientometrics, 102(1), 411-432.](https://link.springer.com/article/10.1007/s11192-014-1251-5)
+
+
+*  [Tidy Data. Journal of Statistical Software 59 (10).
+Wickham, Hadley, and Garrett Grolemund. 2016. R for Data Science: Import, Tidy, Transform, Visualize, and Model Data. O’Reilly Media, Inc.](https://vita.had.co.nz/papers/tidy-data.pdf) - Nerdy but useful paper on data tidying in R; what tidy data is, how we achieve it, and how it makes our life as researchers easier.
