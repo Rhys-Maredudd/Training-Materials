@@ -5,16 +5,16 @@ author: "Rhys Maredudd Davies"
 format: 
   revealjs:
     smaller: true
-    theme: night
-    slide-tone: true
+    theme: serif
     chalkboard: true
+    incremental: true
     logo: "https://raw.github.com/Rhys-Maredudd/Training-Materials/main/Lecture_slides/images/UoE_Stacked%20Logo_CMYK_v1_160215.png"
 editor: visual
 ---
 
 ```{r, echo = FALSE}
 ## Setup
-# Tip - if presentation does not work, install the "pacman" package first  with: install.packages("pacman")
+# Tip - if presentation does not work, install the "pacman" package first with: install.packages("pacman")
 pacman::p_load(tidyverse) # tidy data and make nice plots
 pacman::p_load(gt) # tidy tables
 pacman::p_load(rstatix) # stats package for easy t-tests
@@ -1092,7 +1092,7 @@ We can see that ventolin also significantly improves peak airflow, and this prod
 
 ## Paired Sample T-test {.scrollable}
 
-### Ventolin COndition (Data vis)
+### Ventolin Condition (Data vis)
 
 ```{r}
 #| output-location: column-fragment
@@ -1217,7 +1217,7 @@ Enter the ANOVA.
 
 -   Today, we are using ANOVA to compare the difference in Peak Airflow between the New Drug, the Placebo, and Ventolin treatment options.
 
-## ANOVA
+## ANOVA 
 ### Conducting the analysis
 
 ```{r}
@@ -1230,13 +1230,13 @@ ANOVA <- aov(Peak_flow_difference ~ Treatment, # set formula
 summary(ANOVA) # view summary of results
 ```
 
-Amazing! It's significant. Now what?
+* Amazing! It's significant. Now what?
 
-The ANOVA tells us there is a significant difference in mean values across ***all*** of the treatment groups.
+* The ANOVA tells us there is a significant difference in mean values across ***all*** of the treatment groups.
 
-However, it does not tell us where the difference is, and what the difference is. 
+* However, it does not tell us where the difference is, and what the difference is. 
 
-For this, we need ***Post-hoc testing***.
+* For this, we need ***Post-hoc testing***.
 
 ## ANOVA
 ### Post-hoc testing
@@ -1366,25 +1366,27 @@ ggplot(data = plot_data,
   theme_minimal()
 ```
 
-## Addressing the research question
+## Addressing the research question {.scrollable}
 
 ::: {.incremental}
 
 So, we have now finished our statistical analyses. We can conclude the following about our treatment options:
 
-* The new drug significantly improves peak airflow between pre and post intervention measures.
+* The **new drug** ***significantly improves*** peak airflow between pre and post intervention measures.
 
-* The new drug significantly improves the change in airflow in comparison to the placebo.
+* The **new drug** ***significantly improves*** the change in airflow in comparison to the placebo in the initial ***t-test*** analyses.
 
-* Ventolin also significantly improves peak airflow between pre and post intervention measures.
+* **Ventolin** also ***significantly improves*** peak airflow between pre and post intervention measures.
 
-* ANOVA analysis demonstrated a significant difference in change of peak airflow between the 3 groups.
+* **ANOVA** analysis demonstrated a **significant difference** in change of peak airflow between the ***3 groups***.
 
-* Tukey HSD posthoc tests demonstrates that Ventolin significantly increases in the change of peak airflow in comparision to placebo.
+* **Tukey HSD** posthoc tests demonstrates that **Ventolin** ***significantly increases*** in the change of peak airflow in comparision to **placebo**.
 
-* However, with the Tukey correction, there is no longer a significant difference between the New drug and Placebo treatment at the **alpha of .01**.
+* There is ***no significant difference*** between **ventolin** and the **new drug**.
 
-* There is also ***no significant difference*** between ventolin and the new drug.
+* With the Tukey correction, there is ***no significant difference*** between the **New drug** and **Placebo** treatment at the **alpha of .01**.
+
+
 
 :::
 
@@ -1398,6 +1400,7 @@ So, we have now finished our statistical analyses. We can conclude the following
 -   How much impact does setting the alpha have on the meaningfulness of our analyses?
 
 -   What were the strengths of this research?
+
 
 -   What were the limitations of this research?
 
