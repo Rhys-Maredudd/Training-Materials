@@ -42,7 +42,7 @@ I tend to use the graphic interface approach, and then copy and paste its genera
 ```{r upload_data, echo = FALSE}
 
 library(readr)
-ANOVA_workshop_data <- read_csv("ANOVA_workshop_data <- read_csv("https://raw.github.com/Rhys-Maredudd/Training-Materials/main/Stats/Data/ANOVA_workshop_data.csv") %>%
+ANOVA_workshop_data <-  read_csv("https://raw.github.com/Rhys-Maredudd/Training-Materials/main/Stats/Data/ANOVA_workshop_data.csv") %>%
   mutate(
     across(
       where(is.character), as.factor)
