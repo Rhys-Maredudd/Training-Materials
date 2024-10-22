@@ -1,0 +1,324 @@
+---
+title: "ANOVA Worksheet"
+author: "Rhys Davies"
+date: "`r Sys.Date()`"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE) # setting document rendering options
+
+pacman::p_load(tidyverse) # data tidying tools
+pacman::p_load(gt) # pretty tables
+pacman::p_load(modelsummary) # readymade tools for quick summaries
+pacman::p_load(rstatix) # stats tools
+```
+
+
+https://www.meetup.com/rladies-edinburgh/ # R Coding workshops and data science events in Edinburgh
+
+## Workshop Aims
+
+- Learn how to upload a dataset to R
+- Conduct and report a 1 way ANOVA
+- Conduct and report a 2 way interaction ANOVA
+- Conduct and report a 2 way nested ANOVA 
+- Rendering our Rmarkdown document into a word document.
+
+## Uploading data to R
+
+Time to move away from Penguins and Iris. We want to work with our own data, so we need to learn how to upload our own data.
+
+To make our lives easier, we need to do some initial preparation:
+1) Upload our R script and our datasets to the same folder.
+2) From the `Session` tab at the top of our screen, we need to `Set Working Directory` to `Source File Location`.
+
+Doing these steps allows R to understand specifically which files we are working with, and where we want it to upload any new files we generate. After doing the prep work, it's time to upload our data.
+
+We can do this in one of two ways. We can use code to upload the data from our directory. Or we can use the graphic interface, and import our data from the Environment panel at the top right of the screen. 
+
+I tend to use the graphic interface approach, and then copy and paste its generated code into my document - using the best of both worlds.
+
+```{r upload_data, echo = FALSE}
+
+library(readr)
+ANOVA_workshop_data <- read_csv("ANOVA_workshop_data.csv") %>%
+  mutate(
+    across(
+      where(is.character), as.factor)
+         )
+
+summary(ANOVA_workshop_data)
+
+
+```
+
+## Getting to know the data
+
+Today's dataset is a simulated dataset, where the results have been inspired from a combination of two papers:
+* [A meta analysis demonstrating that waiting list conditions are great predictors of treatment efficacy... because they tend to make participants in the wait list condition feel worse.](https://onlinelibrary.wiley.com/doi/full/10.1002/cpp.2032)
+
+* [Studies which argue that the efficacy of mental health treatment options is affected by socio-economic conditions.](https://onlinelibrary.wiley.com/doi/epdf/10.1037/a0015469) 
+
+And so, today's simulated data is representing an imagined experiment. Individuals of varying socio economic groups were invited to participate in a randomised control trial. The trial was compared 3 different treatment options to determine which was most effective at improving mental wellbeing. 
+
+Participants were randomly assigned to one of 3 treatment groups:
+
+* A waitlist condition
+* Meditation workshops
+* Therapy sessions
+
+Socio economic group was evaluated with the [UK geographics classification system](https://ukgeographics.co.uk/blog/social-grade-a-b-c1-c2-d-e). Wherein:
+* **AB** represents higher & intermediate managerial, administrative, professional occupations.
+* **C1** represents supervisory, clerical & junior managerial, administrative, professional occupations,.
+* **D** represents semi-skilled & unskilled manual occupations, Unemployed and lowest grade occupations.
+
+Mental wellbeing was evaluated with the [Warwick Edinburgh Mental Wellbeing Scale (WEMWBS)](https://warwick.ac.uk/fac/sci/med/research/platform/wemwbs). The scale contains 14 items, measured on 5-point Likert scale. Scores range from 14 to 70, with low scores representing low wellbeing, and high scores representing high wellbeing.
+
+### Research Questions
+
+* Which of the 3 treatment options is most effective at improving mental wellbeing?
+
+* Is there a difference in mental wellbeing between the 3 Socioeconomic groups?
+
+* To what extent are the effects of the treatment options conditional on Socio-economic status?
+
+## Inspecting data and tidying
+
+Before analysis, we need to do some initial data tidying. We will focus on just comparing "Post-trial" conditions for the workshop today, as we have a lot to cover. But feel free to push yourself with a repeated measures ANOVA to compare the pre and post trial effects in your own time.
+
+To focus our analysis on the "Post-trial" point of data collection, we need to use the `filter()` function.
+
+```{r results = FALSE}
+df <- ANOVA_workshop_data %>%
+  mutate(
+    across(
+      where(is.character), as.factor)
+         ) %>%
+  filter(Time_point == "Post-trial")
+
+summary(df)
+```
+## Data summaries
+
+
+
+```{r}
+df %>%
+  select( -ID_number, -Time_point) %>%
+modelsummary::datasummary_skim(output = 'gt')
+```
+
+
+### Cross Tabulation
+```{r}
+modelsummary::datasummary_crosstab(Treatment ~ Socioeconomic_group,
+  data = df, output = 'gt' )
+```
+
+### Nested Tables
+
+
+#### Nesting data by Treatment
+```{r}
+modelsummary::datasummary(WEMWBS ~ Treatment *(Mean + SD), 
+                          data = df, output = 'gt')
+```
+
+#### Nesting data by Socioeconomicgroup
+```{r}
+modelsummary::datasummary(WEMWBS ~ Socioeconomic_group *(Mean + SD), 
+                          data = df , output = 'gt')
+```
+#### Nesting data by Treatment and Socioeconomic Group
+
+```{r}
+modelsummary::datasummary(Treatment * WEMWBS ~  Socioeconomic_group *(Mean + SD), 
+                          data = df, output = 'gt')
+```
+
+
+## Assumption checking 
+
+Before commiting to the analysis, we need to check our analysis assumptions. I prefer relying on visual tests, as the statistical assumption tests get a bit weird when used in practice - We are essentially told to perform Statistical blasphemy and accept a null-hypothesis to be confident our assumptions are not violated... For useful reading on the topic, check the [following article](https://link.springer.com/article/10.3758/s13428-023-02072-x).
+
+Anyhow, for today, we need to make sure our data is normally distributed, that our groups are independent, and that we have roughly equal variance.
+
+### Checking Normality
+
+For normality, we will need to use `ggplot()` with the `geom_histogram()` command. Try faceting on both `Treatment` and `Socioeconomic_group` with `facet_grid()`. 
+
+
+```{r}
+ggplot(df,
+       aes( x = WEMWBS, fill = Treatment )) +
+  geom_histogram(alpha = .7, bins = 30) +
+  facet_grid(~Socioeconomic_group ~ Treatment)
+```
+
+Tip: If you want to adjust the width of each bar, use the `bins = ...` command in `geom_histogram`. The larger your set number, the narrower the bars.
+
+### Checking for equal variance
+
+For checking variance, using `geom_boxplot()` is useful, as it visually communicates the mean values and quartiles of the data. It also worth using some faceting here to compare between the groups.
+
+```{r}
+ggplot(df,
+       aes( y = WEMWBS, fill = Treatment )) +
+  geom_boxplot(alpha = .7) +
+  facet_grid(~Socioeconomic_group ~ Treatment)
+```
+
+### QQ plots
+
+Sometimes we need to check the residuals. Particularly when we conduct more complex analyses. To do this, we set our desired model/analysis inside the `plot()` function.
+
+```{r}
+plot(aov(WEMWBS ~ Treatment / Socioeconomic_group, df))
+```
+
+
+## Which of the 3 treatment options is most effective at improving mental wellbeing?
+
+Considering our research question, which variable do we think is our **outcome** variable, and which variable do we think is our **predictor** variable?
+
+After identifying our variables, its time to conduct our analysis. We will use the [`anova_test()`](https://rpkgs.datanovia.com/rstatix/reference/anova_test.html) function of the `rstatix` package, so that we can pipe (`%>%`) the result into a pretty `gt` format. 
+
+
+### Analysis
+
+#### ANOVA
+
+```{r}
+df %>%
+  anova_test(WEMWBS ~ Treatment) %>%
+  gt()
+```
+
+#### Posthoc-tests
+
+From here, we need to conduct our post-hoc analyses to help us determine pair by pair (through adjusted t-tests). We will perform this with the [`tukey_hsd()`](https://rpkgs.datanovia.com/rstatix/reference/tukey_hsd.html) function. Once again, we will pipe the result into `gt()` to make the results more presentable. This time we will alos use the `fmt_number()` function to customise how many digits are presented.
+
+```{r}
+
+df %>%
+  tukey_hsd(WEMWBS ~ Treatment) %>%
+  select(-null.value, - p.adj.signif) %>% # dropping variables as not useful
+  gt() %>%
+  fmt_number(
+    decimals = 3 # changing to 3 decimal places
+    )  
+  
+```
+
+## Task Time: 
+
+Time to run the next analysis yourselves. You will use the `anova_test()` and `tukey_hsd()`
+
+### Is there a difference in mental wellbeing between the 3 Socioeconomic groups?
+
+#### ANOVA
+
+```{r}
+
+```
+
+#### Posthoc-tests
+
+```{r}
+
+```
+
+
+## To what extent are the effects of the treatment options conditional on Socio-economic status?
+
+When ever we see the phrase *"is conditional..."* or *"moderates"*, we are implying that the result will be in the ***"It depends"*** category of interpretation. Conducting these types of analyses needs us to set an interaction term, or a nesting term.
+
+Setting ****interaction*** effects in R is lovely and simple. We set a `*` between the predictor variables to specify the interaction. This is done the same way with linear models through the `lm()` function. It is also done the same way with generalised linear models with the `glm()` function. So this consistency is very helpful.
+
+Meanwhile, to set ***nested*** effects in our analysis models, we use `/` between our variables.
+
+### Interaction Analysis
+
+You're going to try conducting this analysis by yourselves. We'll use the same functions as earlier, but this time we will set `*` between our predictor variables.
+
+#### 2 way interaction ANOVA
+
+```{r}
+
+```
+
+#### 2 way interaction posthoc test
+
+```{r}
+
+```
+
+
+
+### Nested Analysis
+
+You'll notice that the interaction table is pretty overwhelming. Conducting interaction analyses with anova quickly gets complicated, as you find yourself comparing every possible combination (as a tip, performing a linear model with `lm()` provides a more concise and mathematically equivalent set of results. But you do need to learn to identify your reference variables and calculate your interpretations for that option). 
+
+There is a more serious problem though - theoretically, do we care about comparing the changes in well-being by treatment options by every socioeconomic pairing? Should we really suggest that people should try being less poor if they want meditation to be more effective? 
+What we want instead is to use the nested anova, so that we can compare paired Socioeconomic_groups across the different Treatment options. For more insight on the nested ANOVA, check this [useful post from the Handbook of Biological Statistics](http://www.biostathandbook.com/nestedanova.html). 
+
+#### Nested ANOVA
+
+To work our way through the nested ANOVA, I have provided the code in advance (as it can get a little abstract trying to figure out the order of presenting). My mental trick to remind myself of how to structure neste ANOVA is to think "I want to compare my first groups **inside** of the second group". And so I use the `/` to state that `Socioeconomic_group` is inside of `Treatment`.
+
+```{r}
+df %>%
+  anova_test(WEMWBS ~ Socioeconomic_group +  Socioeconomic_group/Treatment) %>%
+  gt() %>%
+  fmt_number(decimals = 3)
+```
+
+#### Nested Posthoc
+
+As for the posthoc tests, we want to make sure that we present the comparisons of every `Socioeconomic_group` within every `Treatment` group. For this, we use the tidyverse `group_by()` function to initally group the presentation of the data by the `Socioeconomic_group`.
+
+From there, we pipe the analysis into the `tukey_hsd()`, but this time only on `WEMWBS ~ Treatment`. This is because we are comparing `Socioeconomic_group` within every `Treatment` group.
+
+
+```{r}
+df %>%
+  group_by( Socioeconomic_group) %>% 
+  tukey_hsd(WEMWBS ~ Treatment) %>% 
+  select(-term, -null.value, -p.adj.signif ) %>%
+  gt() %>%
+  fmt_number(decimals = 3)  
+```
+
+## Rendering the finished document
+
+Now we have finished conducting our analysis. We can render our report straight into a word document with R markdown. This is because we have set the output command in the YAML header (box at the top of the document) to "output: word_document". Rmarkdown can also produce pdf's, and html pages. So there is plenty of flexibility. This is a rabbit hole, but offers plenty of flexibility and creativity in presenting your research. For further guidance on rendering Rmarkdown documents, this is [webbook](https://bookdown.org/yihui/rmarkdown/html-document.html) is a fantastic resource to get started.
+
+Note: html pages tend to be more user friendly to create, and will look prettier. They also have the advantage of being ready to upload to the web as web pages. For example, here is the [webpage](https://rhys-maredudd.github.io/Adaptively_Maladaptive.github.io/) I made to share my analysis at a conference. However, I also appreciate that most of us work with word documents, and so this worksheet is focused on making a word document.
+
+The final step of rendering the document is easy: we just press the `Knit` button on the top of our document panel. It's the steps along the way that can be a little trickier:
+
+1) We want to make sure our working directory leads the document to our data correctly (we did this to upload our data).
+2) The document will only render if all the code is correct. If there is a mistake, it will tell which line needs correcting : which is very handy!
+3) We need to make sure we are only presenting the objects we want to present. 
+
+Step 3 refers to the code chunks. With R markdown we can decide if which elements of the code chunk we want to be translated into the finished document. The default is for it to publish the code, along with any warnings/messages, with any output generated. 
+
+If we want to hide the code, we input `echo = FALSE` into the top of the code chunk, like so:
+
+```{r echo=FALSE}
+
+```
+
+If we want to hide any warnings or messages, we add `warning = FALSE` and `message = FALSE` respectively.
+```{r warning = FALSE, message=FALSE}
+
+```
+
+If we wanted to disable these features across the entire document, we would do it at the very start with this line of code:
+
+```{r}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE) 
+```
+
+That's our prep ready to go. Time to click "Knit" and inspect our word documents.
