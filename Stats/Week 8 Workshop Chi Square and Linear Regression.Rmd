@@ -1,0 +1,402 @@
+---
+title: "Chi Squared and Linear Regression"
+author: "Rhys Davies"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+pacman::p_load(tidyverse)
+pacman::p_load(gt)
+pacman::p_load(modelsummary)
+pacman::p_load(rstatix)
+pacman::p_load(plotly) # interactive plots - useful for interpreting regression
+pacman::p_load(flextable) # pretty regression tables
+```
+
+## Session Aims
+
+* Conduct Chi Square analysis in R
+* Conduct simple linear regression in R
+* Conduct multiple regression in R
+* Conduct multiple regression with categorical moderator in R
+* Report and interpret our regression
+* Bonus material - continuous moderators in R
+
+
+## Loading Data
+
+For the Chi Square section of today, we will be using a dataset on the Titanic. This data is taken from [Kaggle](https://www.kaggle.com/datasets/vinicius150987/titanic3?select=titanic3.xls).
+
+```{r}
+library(readxl)
+titanic <- read_excel("~/HiSS R Tutoring/Datasets/titanic3.xls") %>%
+
+summary(titanic)
+
+```
+
+
+## Data Overview
+
+ We are interested in examining if the class of ticket a passenger was on had an influence on the mortality rate of the doomed journey (i.e., was there a difference between 1st class, 2nd class, and 3rd class passengers in whether they survived or not). For this, we will be focused on the `survived` and `pclass` variables. 
+ 
+* `survived` is a binary variable. 0 is representing "did not survive the sinking of the titanic", and 1 represents "did survive the sinking of the titanic".
+
+* `pclass` is a categorical ordinal variable, with each number representing the passenger class - 1 for 1stclass, 2 for 2nd class, and 3 for 3rd class.
+
+### Research Question
+
+From this dataset, we are interested in investigating whether the passenger class on the Titanic influenced whether a passenger survived the sinking or not.
+
+What might our hypothesis be?
+
+What type of analysis could we use for comparing count data? 
+
+## Preparing Data for Analysis
+
+Our first step is to check our data to make sure our variable are correctly coded. Let's focus on the `pclass` and `survived` variables, to see how they are currently treated:
+
+```{r}
+
+```
+
+### Wrangling the data
+
+As usual, we will need to do some initial treatment of the data. We need to turn `pclass` and `survived` into factors using the pipe `%>%` with the `mutate()` and `as.factor()` functions. 
+
+```{r}
+
+```
+
+## Cross tabulation of data
+
+Good work. Some of the functions we will be using for our Chi Square analyses will involve using cross tabulations first. This will involve us needing to do some further data wrangling. As a bonus, viewing our cross tabulation will help us start to understand our data, as it will allow us to compare the mortality rates between the passenger classes.
+
+
+```{r}
+crosstab <- titanic %>%
+  select(survived, pclass) %>% # selecting the variables we need
+  group_by(survived, pclass) %>% # grouping the data by our chosen variables
+  tally()  %>% # asking R to tally/count the cases in each overlap of cases
+  spread(survived, n) # spreading the data into a wide/cross tabulation with columns determined by the survived, and values by our n values from the tally
+
+crosstab %>% gt()
+
+
+```
+
+## Chi Square
+
+Now its time to run our analysis. In this case, we are comparing our two categorical group values - `pclass` and `survived`, and so we need an analysis that facilitates comparing the count values of at least two categorical variables.
+
+The Chi Square analysis allows us to do just this.
+
+For those of you interested in parametric alternatives (which we will cover in the next workshop...), we could also use analysis methods from the **Generalized Linear Models** (GLM's) to address this sort of data.
+
+For example, using the *Poissson* regression of the GLM family would allow us to model the count data, whilst using the *logistic* regression would allow us to model the binary outcomes of 0 and 1 (i.e., in this case, whether or not an individual survived.). 
+
+## Using the Chi Square Test
+
+Now unfortunately, the functions for working with chi square analysis are a little bit picky. These functions demand the use of cross tabulations with only 2 columns. The object we created in the previous step contains 3 columns. 
+
+```{r}
+glimpse(crosstab)
+```
+So to remove a column, we need to use some base R coding. With base R, we modify our data by changing rows and columns of the data with square brackets after our dataset - like so `data[ , ]`. The space before the comma `,` refers to rows, whilst the space after the comma `,` reffers to columns. To remove the column like we want to, we need to use a minus sign `-` in front of our desired column number. 
+
+In this case, we need to remove the first column, as it only contains the names and no values (i.e., `data[ , -1]`). After doing so, we can throw in the modified data into the `chisq_test()` function from the `rstatix` family.
+
+```{r}
+
+```
+
+*We can also remove the first column with the simpler and more elegant tidyverse methods (i.e., `crosstab %>% select(-pclass) %>% chisq_test()`). But I wanted to show you some base R techniques as well, as they're useful skill to have in the tool box.
+
+And for the effect size, we need to get Cramer's V with the `cramer_v()` function from `rstatix`
+
+```{r}
+
+```
+To interpret the magnitude of this effect size, we need to refer to Cramer's guidelines: 
+
+(We're going to build the table ourselves this time. We'll create 4 vectors, and bind them into a dataframe with `data.frame()`).
+
+```{r}
+df <- c(1,2,3,4,5)
+Small <- c(.10, .07, .06, .05, .04)
+Medium <- c(.30, .21, .17, .15, .13)
+Large <- c(.50, .35, .29, .25, .22)
+
+Cramer_V_Magnitude_table <- data.frame(df, Small, Medium, Large)
+Cramer_V_Magnitude_table %>% gt()
+```
+
+Comparing our effect size with the appropriate degrees of freedom, of what magnitude is our effect size?
+
+### Posthoc testing
+
+This will feel like an echo of the ANOVA. We have a significant result overall all across the data - that there was a significant association between passenger class and survival of the Titanic sinking. But this does not tell us the whole story. It does not tell us where the differences lie. For this we need some posthoc testing.  
+
+Now we because we are working with a matrix, we have two options of testing our data - Vertically with Pairwise Proportion Tests, and Horizontally with Rowwise Proportion Tests. 
+
+```{r}
+crosstab %>% gt()
+```
+If we want percentages as well, we can use the `datasummary_crosstab()` function from `modelsummary`.
+```{r}
+datasummary_crosstab(
+   data = titanic, 
+   pclass ~ survived,
+   output = "gt"
+  )
+```
+
+
+
+#### Pairwise Proportion Test 
+
+In this case, the pairwise proportion test will be comparing the survival proportion ratios across each parred combination of our `pclass` values. 
+
+So for this, we will use the `pairwise_prop_test()` function of the `rstatix` package, and once again we need to enter our `crosstab` dataset with the first column removed. As this analysis runs multiple tests, it applies a adjustment to the p-values to reduce our risk of a Type 1 error. 
+
+```{r}
+
+```
+
+#### Row Wise Proportion Test
+
+The Row Wise Proportion test compares the survival rates within each row - that is: was the difference between surviving and not surviving significantly different in First class passengers? Was it significantly different in Second class passenger? Was it significantly different in Third Class passengers.
+
+This time we will be using the `row_wise_prop_test()` function from the `rstatix` package. Once again, we need to enter our `crosstab` data with the first column removed. 
+
+```{r}
+
+```
+## Visualising the analysis
+
+```{r}
+
+ggplot(titanic,
+       aes(x = pclass, fill = survived)
+       )+
+geom_bar(position = "fill") + # We can play with the postion command: fill will give us proportions, whilst setting to dodge will allow us to compare count values.
+  scale_fill_manual( values = c("blue4","#E0FCE7")) + # We can also customise our colour scheme. I've chosen something more nautical here - there are preset colours available, but we can also use hexcodes.
+  theme(legend.position = "bottom") +
+  theme_classic() +
+  labs(title = "Titanic Survival Comparison by Passenger Class",
+       y = "Survival Proportion", # Make sure to change this in accordance to the geom_bar() position options
+       x = "Passenger Class") +
+  coord_flip() # flip the axis - can make it easier to compare groups
+
+```
+
+## Linear regression
+
+Time for some regression analysis! For this analysis, we will revisit the built in `iris` dataset, as the data has some nice features for conducting and interpreting regression analysis.
+
+Let's imagine that our research question revolves around better understanding predictive features of Petal Length in Iris flowers. Specifically, we want to understand if Sepal Width can help us predict the Petal Length of Iris flowers.
+
+### Inspecting the data
+
+```{r}
+summary(iris)
+plot(iris)
+```
+
+### Conducting the regression
+
+The formula for conducting regression follows the same pattern as when we set our anova. Only this time, we use the `lm()` function for our *linear model*. 
+
+We set our outcome variable first (i.e., `Petal.Length`), place our squiggly tilda `~`, and then set our predictor variables (in this case, just `Sepal.Width`). Don't forget to let R know which dataset you are using.
+
+As we will need to check our assumptions, and interpret our model, our life will be easier if we assign the model to an object first.
+
+From there, we can pipe our model into the `plot()` function to help check our assumptions, and into `summary()` to interpret the results.
+
+```{r}
+# Setting model
+m <- lm(Petal.Length ~ Sepal.Width, iris) 
+
+# Checking assumptions
+m %>% plot()
+
+# Viewing results
+m %>% summary()
+
+```
+
+### Standardised coefficents
+
+If we want to view the standardised coefficents (i.e., the Beta), we need to first standardise our variables. We can do this by wrapping the `scale()` function around our variables when we set the model.
+
+```{r}
+# Setting model
+m_standard <- lm(scale(Petal.Length) ~ scale(Sepal.Width), iris) 
+
+# Checking assumptions
+m_standard %>% plot()
+
+# Viewing results
+m_standard %>% summary()
+
+```
+
+## Interpreting the regression
+
+Those of you with keen eyes will notice that the diagnostic plots are hitting of some peculiarities in the data - so we should be very careful of how we interpret the results. To understand why, let's visualise the model, and make it interactive.
+
+### Visualising linear regression
+
+Time to visualise our data. We're also going to use the `ggplotly()` function from `plotly` to help us translate our regression table to the plot. 
+
+#### Unstandardised
+
+Let's start with the unstandardised model.
+
+```{r}
+as_flextable(m) # Regression table for comparing results
+
+plot <- ggplot(data = iris,
+               aes(x = Sepal.Width, y = Petal.Length)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+
+ggplotly(plot) # making our plot object interactive
+
+```
+
+
+#### Standardised 
+
+To get our standardised plot, we're going to use our `scale()` function again. We're also going to add some colour into the plot to help us better understand why the plot might be misleading.
+
+```{r}
+
+as_flextable(m_standard) 
+
+plot_standard <- ggplot(data = iris,
+               aes(x = scale(Sepal.Width),
+                   y = scale(Petal.Length))
+               ) +
+  geom_point(aes(color = Species)) +
+  geom_smooth(method = "lm")
+
+ggplotly(plot_standard) # making our plot object interactive
+
+```
+
+So what do we think is going on here? (With plotly you can remove species by clicking on the legend).
+
+We need to add some variables! It looks like Species are an important covariate in this case.
+
+## Multiple Regression
+
+Adding covariates to an `lm()` is simple. We just use the `+` sign between our predictor variables. R itself is very neutral about distinguishing between our independent variable and our covariates - these things only matter to use as people. To R, they are all just seperate predictor variables.
+
+So, lets add `Species` into our previous model, view the summary, and view th diagnostic plots. We'll assign the model to the `m2` object this time. 
+
+And whilst we're at it, lets make our model with standardised coefficents with `scale()`, and assign it to `m2_standard`. (By the way, as R dummy codes `Species`, we do not need to standardise this variable).
+
+After we're done setting the models, check the diagnostics with `plot()` and check the model `summary()`.
+
+```{r}
+
+```
+
+Those diagnostic plots are much nicer! And look how much more of the variance is beign explained by the adjRsquare. But you'll notice that there's only 2 species being displayed in the summary table? What is going on here, and how do we interpret the results?
+
+This happens because linear models will break if we include every term from a categorical variable. There needs to be a gap, so that the other dummy coded values can be compared against something. The categorical value absent from the table is known as the **reference value**. However, we can infer it by reading the **intercept** term. 
+
+The remaining species values should be interpreted as their own specific intercept relative to the **reference intercept**. (That is, we add the value of say SpeciesVirginica from the regression table to the intercept value to determine where it's )
+
+### Visualising multiple regression
+
+```{r}
+
+as_flextable(m2) 
+
+plot2 <- ggplot(data = iris,
+               aes(x = Sepal.Width,
+                   y = Petal.Length,
+                   color = Species)
+               ) +
+  geom_point() +
+    stat_smooth(method = "lm") +
+      geom_vline(xintercept = 0, color = "black") 
+
+ggplotly(plot2) # making our plot object interactive
+
+```
+
+Hmmmmm... Something is not quite right. The plot very clearly shows a seperate slope for every species, whilst the result table only has the one slope. It looks our plot and our analysis do not align. Let's change that and manually add the regression lines that reflect the regression table. We will use the standardised regression table this time.
+
+```{r}
+
+as_flextable(m2_standard) 
+
+plot2_standard <- ggplot(data = iris,
+               aes(x = scale(Sepal.Width),
+                   y = scale(Petal.Length),
+                   color = Species)
+               ) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+     geom_abline(color = "red", linetype = "longdash", alpha = .7,
+                intercept = -1.401, slope = 0.118) +
+   # Versicolor line (i.e., Our intercept here is the table intercept + Versicolor coefficent, whilst the slop is just the Sepal.Width value
+    geom_abline(color = "green", linetype = "longdash", alpha = .7,
+                intercept = 0.362, slope =  0.118) +
+   # Virginica line (i.e., Our intercept here is the table intercept + Virginica coefficent, and our slope is the Sepal.Width coefficent)
+     geom_abline(color = "blue", linetype = "longdash", alpha = .7,
+                intercept =  1.039, slope =  0.118) +
+       geom_vline(xintercept = 0, color = "black") 
+
+ggplotly(plot2_standard) # making our plot object interactive
+
+```
+
+This way we can see the contrast. And it is particularly severe for the Setosa species.
+
+To fix this, we need to set a model where the the association between `Sepal.Width` and `Petal.Length` will be different in each species. We achieve this by setting an interaction term (also known as a **moderator**.
+
+## Multiple Regression with a categorical interaction term
+
+Interaction terms sound scary, and then can be scary to interpret. We're going to use R and our interactive plots to make this less scary. 
+
+First of all - we can set our interaction term just like we did with ANOVA, by using the multiplication symbol `*`. 
+
+So this time, we need to take our previous model, and replace the `+` with a `*`. We will also create a model with standardised coefficent again with the `scale()` function. We will name our models `m_int` and `m_int_standard` respectivley. 
+
+Once again, amke sure check the diagnostics with `plot()` and check the model `summary()`. Try having a go at interpretting what might be going on here.
+
+```{r}
+
+```
+
+That's a lot of numbers! Let's make sense of it line by line with our interactive plots. We will work with the standardised model, as it will be simpler to communicate the intercepts and slopes of each Species with the interactive plot (otherwise I would need to manually assign each line, and that would be brainkill at the end of a tutorial).
+
+### Plotting and interpreting interactions
+
+```{r}
+
+as_flextable(m_int_standard) 
+
+plot_int <- ggplot(data = iris,
+               aes(x = scale(Sepal.Width),
+                   y = scale(Petal.Length),
+                   color = Species)
+               ) +
+  geom_point() +
+  # Adding lines to meet 0 intercept
+  geom_smooth(method = "lm") +
+      geom_vline(xintercept = 0, color = "black")  +
+      coord_cartesian(xlim = c(0,4.4),
+                      ylim = c(0,10))
+
+ggplotly(plot2) # making our plot object interactive
+
+```
+
+## End
