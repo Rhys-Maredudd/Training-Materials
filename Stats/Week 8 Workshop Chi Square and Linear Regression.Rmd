@@ -30,8 +30,7 @@ pacman::p_load(flextable) # pretty regression tables
 For the Chi Square section of today, we will be using a dataset on the Titanic. This data is taken from [Kaggle](https://www.kaggle.com/datasets/vinicius150987/titanic3?select=titanic3.xls).
 
 ```{r}
-library(readxl)
-titanic <- read_excel("~/HiSS R Tutoring/Datasets/titanic3.xls") %>%
+titanic <- read_csv("https://raw.github.com/Rhys-Maredudd/Training-Materials/main/Stats/Data/titanic.csv") 
 
 summary(titanic)
 
