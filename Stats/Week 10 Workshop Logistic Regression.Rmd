@@ -1,0 +1,262 @@
+---
+title: "Logistic Regression"
+author: "Rhys Davies"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+pacman::p_load(tidyverse) # Data tidying and data vis
+pacman::p_load(gt) # Pretty tables
+pacman::p_load(performance) # Model comparison tools
+pacman::p_load(sjPlot) # Easy data vis of glm
+pacman::p_load(report) # Easy reporting of models
+pacman::p_load(easystats) # Nice package of packages to simplify stats.
+```
+
+## Logistic Regressions and the **Generalised** Linear Models (**GLM**).
+
+Before we get started; a detour with poor statistical naming practices.
+
+Today we will be covering the logistic regression, which is a special case of the **generalised** linear model. The **generalised** linear model is a generalised family of models that can be applied to a wide variety of statistical analyses. Indeed, the linear regressions, ANOVAs, and t-tests used in previous workshops fit into this overarching family of **generalised** linear models as a cluster of **general** linear models... If there is one key take away from this course, it's that statisticians should not be allowed to name things. 
+
+Anyhow **generalised** linear models can be **generalised** to a wide variety of data analyses. But under the mathematical hood, they all share the same underlying structure:
+
+* The **Random component**: This refers to the probability distribution of the response variable (Y); e.g. the normal "Gausian" distribution for Y in the general linear model, or the binomial distribution for Y in the binary logistic regression.
+
+* The **Structural component**: refers to the explanatory variables (X1, X2, ... Xk) as a combination of linear predictors; e.g. β0 + β1x1 + β2x2. 
+
+* The **Link function**: This specifies the link between random and systematic components. It says how the expected value of the response relates to the linear predictor of explanatory variables. This is the key difference between each glm. In the general linear model, it's simply "1" or "identitiy" (as multiplying a value by 1 does not change the identity).Whilst for the logistic regression, the link function is "logit".
+
+This structure provides us with flexibility to work almost any outcome variable; so long as we can find the appropriate link function. This makes the GLM a versatile tool that can be applied to a wide range of research questions. 
+
+## Fitting Generalised Linear Models in R
+
+Generalized linear models are fit using the `glm( )` function. The form of the glm function is
+
+```{r}
+# glm(Outcome ~ predictor_1 + predictor_2 , 
+#     family= familytype(link=linkfunction), 
+#     data= dataset)
+
+
+```
+
+Meanwhile, the table below gives an overview of the `glm()` family commands along with their associated link functions.  
+
+```{r glm_family_table}
+Family <- c("binomial", "gaussian", "Gamma", "inverse.gaussian", "poisson", "quasi", "quasibinomial", "quasipoisson")	
+Link_Function <- c('(link = "logit")','(link = "identity")', '(link = "inverse")','(link = "1/mu^2")', '(link = "log")', '(link = "identity", variance = "constant")' , '(link = "logit")','(link = "log")')	
+	
+Family_and_link_function <- data.frame(Family, Link_Function)	
+	
+Table <- Family_and_link_function %>% gt() %>%
+  tab_header(
+    title = md("*Generalised Linear Model Help Sheet*"),
+    subtitle = md("Copy and paste the appropriate **family** and associated **Link Function** into your glm")
+  ) %>%
+  cols_label(
+    Family = md("**Family**"),
+    Link_Function = md("**Link Function**")
+  ) %>%
+  cols_align(align = "center")
+	
+	
+Table	
+
+```
+
+## Fitting Logistic Regressions
+
+So, before we crack on with any analyses today, we will set our template for the logistic regression. After which, we will revisit the titanic dataset, and get to work with conducting logistic regressions in R. 
+
+For Logistic Regressions, we are trying to predict a binary outcome - 0 or 1; TRUE or FALSE; Survived or Not Survived. This places our outcome variable in the *binomial* family. 
+
+### Example dataset
+
+Let's run through an example dataset before we get to work with the titanic dataset. We will use the `mtcars` dataset, and set a model to predict the `am` variable (automatic or manual).
+
+#### Top Tip
+
+To gain additional information on built in datasets in R, just type in `?` at the start of the dataset name. It will bring up a description of the dataset in the **Help** panel
+
+```{r}
+?mtcars
+```
+
+### Setting the model
+
+Let's get this code up and running.
+
+```{r}
+example_model <- glm(am ~ wt, # set your variables
+                     data = mtcars, # set the data
+                     family = "binomial"(link=logit) #set the family and the appropriate link function
+                     )
+```
+
+
+### Checking Model Assumptions
+
+```{r}
+check_model(example_model)
+```
+
+
+### Interpretting Model
+
+For interpreting the model, and for making nice tables, we will use `selct_parameters()` in combination with `model_parameters()` to get a nice table of model coefficients. 
+
+For evaluating the model fit, we need to use the `model_performance()` function. 
+
+For both functions, the `gt()` and `fmt_number(decimals = 4)` are piped in to get tidy and readable tables.
+
+```{r}
+example_model %>% 
+  select_parameters() %>%
+  model_parameters() %>% 
+  gt() %>% fmt_number(decimals = 4)
+
+
+example_model %>% 
+  model_performance() %>% 
+  gt() %>% fmt_number(decimals = 4)
+```
+
+#### Easy/useful option
+
+The `report()` function from the `report` package was made to standardise and streamline the reporting of analyses, so that are very reproducible and to minimise unintentional human reporting error. Simply plug in your model, and run the code. 
+
+Take care; whilst this function does minimise the risk of reporting error, it does assume the model has been correctly specified and that model assumptions have been correctly accounted for. 
+
+```{r}
+report(example_model)
+```
+
+### Visualising Model
+
+For visualising our model, we will use the `plot_model()` function of the `sjPlot` package. It's 
+
+```{r glm_visualisation}
+
+plot_model(model = example_model , 
+    type = "pred", 
+    terms = "wt"
+           ) +
+  theme_classic() +
+  labs(title = "Predicted Probabailites of Automatic vs Manual car",
+       x = "Weight (1000lbs)",
+       y = "Automatic (0) vs Manual (1)")
+
+
+```
+
+## Task Time
+
+Time to re-run our logistic regression with the titanic data from the last workshop.
+
+### Reading in data
+
+This week we will read the data straight from Github. We need to transform the `pclass`, `survived` and `sex` variables into factors with the `mutate()` and `as.factor()` functions.
+
+```{r}
+titanic <- read_csv("https://raw.github.com/Rhys-Maredudd/Training-Materials/main/Stats/Data/titanic.csv") %>% 
+
+
+```
+
+### Theory and hypothesis
+
+Now that our data is prepared, let's set our model and start analysis. 
+
+I'm basing my theory for this analysis on hours of research, and not from viewing the film Titanic....
+
+In the film, as the ship starts to sink; the *women* and *children* are prioritised for the lifeboats. From this , it implies that *age* would be an important predictor, as would *sex*. We can also assume that the elderly would be more vulnerable to the cold, even if they did get to the lifeboats.
+
+Let's say we wanted to test if the chances of survival from the accident were influenced by an interaction of `age` and `sex`: that is, we expect the effects of `age` to have a different relationship with `survived` on the basis of `sex`. 
+
+What might we hypothesise?
+
+* We hypothesise, that for women, age would have a ... and significant association with survival.
+
+* We hypothesise that for men, age would have a ... and significant association with survival. 
+
+### Setting the model
+
+Here you will need to use `glm()` and the appropriate family and link function. Assign the `glm()` to an object called `model` with `<-`.
+
+As we are running an interaction model, we run the risk of *multicollinearity* impacting our coefficients - the interaction term will naturally have a very high correlation with the outcome variable, which interfere with the interpretation. We can address this by wrapping our `age` variable in the `scale()` function when we set the model.
+
+If you want, you can check the effect of the `scale()` function in the assumption checking and model interpretation stage of the analysis.
+
+```{r}
+
+```
+
+### Testing assumptions
+
+Here you will need to use the `check_model()` function from the `performance` package.
+
+```{r}
+
+```
+
+### Interpreting the model
+
+For this stage, we will use `selct_parameters()` in combination with `model_parameters()` to get a nice table of model coefficients. 
+
+For evaluating the model fit, we need to use the `model_performance()` function. 
+
+Make sure to pipe the outputs into `gt()` and `fmt_number(decimals = 4)` to get a nice tidy and readable table.
+
+```{r}
+
+```
+
+Dont forget to test the `report()` function from earlier:
+
+```{r}
+
+```
+
+### Visualising the model
+
+Here we will use the `plot_model()` function from the `sjPlot` package. When setting the terms, we need to address both "`"age"` and `"sex"` with the `c()` function (becuase we want to combine both). 
+
+Be sure to set the type to "pred", as we want a model based on predicted values.
+
+```{r}
+ 
+```
+
+## Bonus task for your own time
+
+In the **Fitting Generalised Linear Models in R** heading from this worksheet, you will see the table that allows you to set any model you want with GLM. Play around with glm function to test a variety of analysis types. 
+
+```{r}
+Table
+```
+
+
+You could try converting the glm into a linear model (family = "gaussian"(link = "identity"). You could try analysing the outcome of a count variable with a *poisson* regression (family = "poisson"(link = "log"). 
+
+Just customise the family and link to appropriately match your outcome variable, and you can model it.
+
+If you want help finding different datasets to play with, run the code below to see all the datasets built into R. You can access them by typing their name into a code chunk. Otherwise, you can test with your own data, or any dataset you might have [found online](https://www.kaggle.com/datasets). 
+
+```{r}
+library(help = "datasets")
+```
+
+
+## GLM resources
+
+Here are some resources that might be useful if you wish to `glm()` with greater rigour:
+
+* [Beyond Multiple Linear Regression - Applied Generalized Linear Models and Multilevel Models in R (Roback & Legler, 2021)](https://bookdown.org/roback/bookdown-BeyondMLR/).
+* [Data Analysis in R - Generalised Linear Models Chapter (Midway, 2022)](https://bookdown.org/steve_midway/DAR/glms-generalized-linear-models.html)
+* [Stack Exchange Discussion on which glm family to use ](https://stats.stackexchange.com/questions/190763/how-to-decide-which-glm-family-to-use).
+* [Plotting GLM's (and other regression models!) is simple and easy with sjPlot](https://strengejacke.github.io/sjPlot/articles/plot_marginal_effects.html).
+* [Plotting and making GLM tables with prettyglm](https://jared-fowler.github.io/prettyglm/)
+* [EasyStats](https://easystats.github.io/easystats/index.html)
